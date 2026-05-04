@@ -1,0 +1,190 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  /* Typography */
+  --font-sans:    var(--font-inter);
+  --font-mono:    var(--font-jetbrains);
+  --font-heading: var(--font-playfair);
+
+  /* Atelier Brand Palette */
+  --color-background:       var(--background);
+  --color-foreground:       var(--foreground);
+  --color-gold:             var(--gold);
+  --color-gold-dim:         var(--gold-dim);
+  --color-pearl:            var(--pearl);
+  --color-surface:          var(--surface);
+  --color-surface-elevated: var(--surface-elevated);
+  --color-border-subtle:    var(--border-subtle);
+  --color-text-muted:       var(--text-muted);
+
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+}
+
+:root {
+  /* ── Atelier Palette ──────────────────────────────────── */
+  --background:        #0C0B09;   /* obsidien chaud */
+  --foreground:        #D8D2C8;   /* beige cassé */
+  --gold:              #C9A048;   /* or doux */
+  --gold-dim:          #8E6E28;
+  --pearl:             #F0EAE0;   /* ivoire */
+  --surface:           #141210;
+  --surface-elevated:  #1C1A16;
+  --border-subtle:     rgba(201, 160, 72, 0.12);
+  --text-muted:        #6B6358;
+
+  /* shadcn compat */
+  --card:              #141210;
+  --card-foreground:   #D8D2C8;
+  --popover:           #141210;
+  --popover-foreground:#D8D2C8;
+  --primary:           #C9A048;
+  --primary-foreground:#0C0B09;
+  --secondary:         #1C1A16;
+  --secondary-foreground: #D8D2C8;
+  --muted:             #1C1A16;
+  --muted-foreground:  #6B6358;
+  --accent:            #C9A048;
+  --accent-foreground: #0C0B09;
+  --destructive:       oklch(0.577 0.245 27.325);
+  --border:            rgba(201, 160, 72, 0.12);
+  --input:             rgba(201, 160, 72, 0.08);
+  --ring:              #C9A048;
+  --radius:            0.25rem;   /* coins plus serrés — luxe sobre */
+}
+
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  html {
+    background-color: #0C0B09;
+    scroll-behavior: smooth;
+    scroll-padding-top: 4.5rem;   /* mobile — navbar shrunk */
+  }
+
+  @media (min-width: 1024px) {
+    html {
+      scroll-padding-top: 5rem;   /* desktop */
+    }
+  }
+
+  body {
+    background-color: #0C0B09;
+    color: #D8D2C8;
+    font-family: var(--font-inter), system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /*
+   * Playfair Display pour les headings — uppercase + letter-spacing serré
+   * = monumentalité éditoriale. Contraste fort avec le monospace des data.
+   */
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-playfair), Georgia, serif;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: -0.01em;
+    line-height: 0.92;
+  }
+
+  .font-data {
+    font-family: var(--font-jetbrains), monospace;
+  }
+}
+
+/* ── Hero initial states — FOUC prevention ───────────────────────────────────
+ * Invisible via CSS dès le SSR HTML. GSAP override au bon moment.
+ * Sans ça : flash ~300ms visible sur premier chargement (bundle pas en cache).
+ * ────────────────────────────────────────────────────────────────────────── */
+.hero-eyebrow,
+.hero-title-1,
+.hero-title-2,
+.hero-title-3,
+.hero-divider,
+.hero-sub,
+.hero-cta,
+.hero-scroll,
+.hero-stats,
+.hero-frame {
+  opacity: 0;
+}
+
+/* ── Keyframes ──────────────────────────────────────────────────────────── */
+@keyframes breathe-gold {
+  0%, 100% { transform: scale(1);    opacity: 1; }
+  50%       { transform: scale(1.08); opacity: 0.7; }
+}
+
+@keyframes shimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position:  200% center; }
+}
+
+@keyframes grain {
+  0%   { background-position:   0%   0%; }
+  10%  { background-position:  -5%  -10%; }
+  20%  { background-position: -15%   5%; }
+  30%  { background-position:   7% -25%; }
+  40%  { background-position:  -5%  25%; }
+  50%  { background-position: -15%  10%; }
+  60%  { background-position:  15%   0%; }
+  70%  { background-position:   0%  15%; }
+  80%  { background-position:   3%  35%; }
+  90%  { background-position: -10%  10%; }
+}
+
+/* ── Utilities ──────────────────────────────────────────────────────────── */
+@layer utilities {
+  .text-gold        { color: #C9A048; }
+  .text-pearl       { color: #F0EAE0; }
+  .text-muted-warm  { color: #6B6358; }
+  .bg-surface       { background-color: #141210; }
+  .bg-surface-elevated { background-color: #1C1A16; }
+
+  /* Gold glow */
+  .glow-gold {
+    box-shadow: 0 0 30px rgba(201,160,72,0.22),
+                0 0 60px rgba(201,160,72,0.08);
+  }
+  .text-glow-gold {
+    text-shadow: 0 0 40px rgba(201,160,72,0.45);
+  }
+
+  /* Gold shimmer text — for special elements */
+  .text-shimmer-gold {
+    background: linear-gradient(
+      90deg,
+      #8E6E28 0%,
+      #C9A048 30%,
+      #F0D080 50%,
+      #C9A048 70%,
+      #8E6E28 100%
+    );
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: shimmer 4s linear infinite;
+  }
+
+  /* Section spacing */
+  .section-padding {
+    padding-top: 6rem;
+    padding-bottom: 6rem;
+  }
+
+  @media (min-width: 1024px) {
+    .section-padding {
+      padding-top: 8rem;
+      padding-bottom: 8rem;
+    }
+  }
+}
