@@ -1,10 +1,9 @@
 "use client";
 import { Phone, Mail, MapPin } from "lucide-react";
-import { CABINET, NAV_LINKS } from "@/lib/constants";
+import { NAV_LINKS, CERTIFS } from "@/lib/constants";
+import type { CompanyData } from "@/lib/types";
 
-const CERTIFS = ["ADA", "AGD", "AACD", "BBB"];
-
-export default function Footer() {
+export default function Footer({ company }: { company: CompanyData }) {
   const year = new Date().getFullYear();
 
   return (
@@ -23,12 +22,12 @@ export default function Footer() {
               <span style={{ color: "#C9A048" }}>◆</span>
               <span className="font-heading text-xl font-extrabold tracking-widest uppercase"
                 style={{ color: "#D8D2C8" }}>
-                {CABINET.name}
+                {company.name}
               </span>
             </a>
             <p className="text-sm leading-relaxed max-w-xs mb-7"
               style={{ color: "rgba(216,210,200,0.35)" }}>
-              Cosmetic & restorative dentistry serving {CABINET.zone}.
+              Cosmetic & restorative dentistry serving {company.zone}.
               Crafted with precision — every smile, every time.
             </p>
             <div className="flex flex-wrap gap-2">
@@ -88,9 +87,11 @@ export default function Footer() {
             </p>
             <ul className="space-y-4">
               {[
-                { Icon: Phone, value: CABINET.phone, href: `tel:${CABINET.phone}` },
-                { Icon: Mail,  value: CABINET.email, href: `mailto:${CABINET.email}` },
-                { Icon: MapPin, value: CABINET.zone, href: null },
+                { Icon: Phone, value: company.phone, href: `tel:${company.phone}` },
+                ...(company.email
+                  ? [{ Icon: Mail, value: company.email, href: `mailto:${company.email}` }]
+                  : []),
+                { Icon: MapPin, value: company.zone, href: null as string | null },
               ].map(({ Icon, value, href }) => (
                 <li key={value}>
                   {href ? (
@@ -130,7 +131,8 @@ export default function Footer() {
           style={{ borderTop: "1px solid rgba(201,160,72,0.06)" }}>
           <p className="font-data text-[10px] tracking-wider"
             style={{ color: "rgba(216,210,200,0.18)" }}>
-            © {year} {CABINET.name} — All rights reserved · {CABINET.license}
+            © {year} {company.name} — All rights reserved
+            {company.license && ` · ${company.license}`}
           </p>
           <div className="flex items-center gap-6">
             {["Privacy Policy", "Terms of Service", "Accessibility"].map((item) => (

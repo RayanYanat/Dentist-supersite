@@ -3,9 +3,10 @@ import { useRef, useEffect } from "react";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import { Phone, ArrowRight } from "lucide-react";
-import { CABINET } from "@/lib/constants";
+import { STATS } from "@/lib/constants";
+import type { CompanyData } from "@/lib/types";
 
-export default function HeroSection() {
+export default function HeroSection({ company }: { company: CompanyData }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const layer1Ref    = useRef<HTMLDivElement>(null);
   const layer2Ref    = useRef<HTMLDivElement>(null);
@@ -195,7 +196,7 @@ export default function HeroSection() {
           <div className="w-5 h-px" style={{ backgroundColor: "#C9A048" }} />
           <span className="font-data text-[11px] tracking-[0.3em] uppercase"
             style={{ color: "rgba(201,160,72,0.7)" }}>
-            {CABINET.doctor} &nbsp;·&nbsp; {CABINET.zone} &nbsp;·&nbsp; [X]+ Years of Excellence
+            {company.zone} &nbsp;·&nbsp; {STATS[0].value}{STATS[0].suffix} Years of Excellence
           </span>
         </div>
 
@@ -244,7 +245,7 @@ export default function HeroSection() {
           </a>
 
           <a
-            href={`tel:${CABINET.phone}`}
+            href={`tel:${company.phone}`}
             className="hero-cta group flex items-center gap-3 px-8 py-4 text-xs font-bold tracking-[0.2em] uppercase transition-all duration-300"
             style={{ border: "1px solid rgba(201,160,72,0.3)", color: "rgba(201,160,72,0.7)" }}
             onMouseEnter={(e) => {
@@ -257,7 +258,7 @@ export default function HeroSection() {
             }}
           >
             <Phone size={13} />
-            <span>{CABINET.phone}</span>
+            <span>{company.phone}</span>
           </a>
 
           <a
@@ -274,14 +275,11 @@ export default function HeroSection() {
         {/* Stats strip */}
         <div className="hero-stats flex flex-wrap gap-x-10 gap-y-3 pt-7"
           style={{ borderTop: "1px solid rgba(201,160,72,0.08)" }}>
-          {[
-            ["[X]+",  "Years of excellence"],
-            ["[XX]+", "Smiles transformed"],
-            ["5.0",   "Google rating"],
-            ["[XX]+", "5-star reviews"],
-          ].map(([val, label]) => (
+          {STATS.map(({ value, suffix, label }) => (
             <div key={label} className="flex items-baseline gap-2">
-              <span className="font-data text-sm font-medium" style={{ color: "#C9A048" }}>{val}</span>
+              <span className="font-data text-sm font-medium" style={{ color: "#C9A048" }}>
+                {value}{suffix}
+              </span>
               <span className="font-data text-[11px] tracking-wider uppercase"
                 style={{ color: "rgba(216,210,200,0.25)" }}>{label}</span>
             </div>

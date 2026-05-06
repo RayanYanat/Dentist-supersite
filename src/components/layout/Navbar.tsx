@@ -1,9 +1,10 @@
 "use client";
 import { useEffect, useState } from "react";
 import { Phone, Menu, X } from "lucide-react";
-import { CABINET, NAV_LINKS } from "@/lib/constants";
+import { NAV_LINKS } from "@/lib/constants";
+import type { CompanyData } from "@/lib/types";
 
-export default function Navbar() {
+export default function Navbar({ company }: { company: CompanyData }) {
   const [scrolled, setScrolled]           = useState(false);
   const [menuOpen, setMenuOpen]           = useState(false);
   const [activeSection, setActiveSection] = useState<string>("");
@@ -57,7 +58,7 @@ export default function Navbar() {
           }}
         >
           <span style={{ color: "#C9A048", fontSize: "0.6em" }}>◆</span>
-          {CABINET.name}
+          {company.name}
         </a>
 
         {/* Desktop nav */}
@@ -93,14 +94,14 @@ export default function Navbar() {
         {/* Right — phone + CTA */}
         <div className="hidden lg:flex items-center gap-5">
           <a
-            href={`tel:${CABINET.phone}`}
+            href={`tel:${company.phone}`}
             className="flex items-center gap-2 transition-colors duration-200"
             style={{ color: "rgba(216,210,200,0.6)" }}
             onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = "#C9A048"; }}
             onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = "rgba(216,210,200,0.6)"; }}
           >
             <Phone size={13} style={{ color: "#C9A048" }} />
-            <span className="font-data text-sm tracking-wider">{CABINET.phone}</span>
+            <span className="font-data text-sm tracking-wider">{company.phone}</span>
           </a>
           <a
             href="#contact"
@@ -126,13 +127,13 @@ export default function Navbar() {
         {/* Mobile */}
         <div className="flex lg:hidden items-center gap-4">
           <a
-            href={`tel:${CABINET.phone}`}
+            href={`tel:${company.phone}`}
             className="flex items-center gap-1.5"
             style={{ color: "#C9A048" }}
             aria-label="Call"
           >
             <Phone size={15} />
-            <span className="font-data text-xs">{CABINET.phone}</span>
+            <span className="font-data text-xs">{company.phone}</span>
           </a>
           <button
             onClick={() => setMenuOpen((v) => !v)}

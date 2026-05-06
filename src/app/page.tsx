@@ -1,43 +1,25 @@
-import AmbientCanvas  from "@/components/shared/AmbientCanvas";
-import CustomCursor   from "@/components/shared/CustomCursor";
-import GlobalTexture  from "@/components/shared/GlobalTexture";
-import GSAPConfig     from "@/components/shared/GSAPConfig";
-import Navbar         from "@/components/layout/Navbar";
-import Footer         from "@/components/layout/Footer";
-import HeroSection    from "@/sections/HeroSection";
-
-/*
- * Sections à implémenter (Phase suivante) :
- *   CraftSection     — "Our Craft" — les soins comme orfèvrerie
- *   GallerySection   — "Transformations" — before/after scrubbed
- *   TrustSection     — "Our Signature" — stats + avis
- *   ContactSection   — "Begin Your Journey"
+/**
+ * Home / — placeholder.
+ *
+ * The real LockedScreen (premium 8-step GSAP entrance) lands in the next
+ * commit. This stub keeps the route resolvable so dev/build don't fail
+ * while the slug route is wired up.
  */
-
-export default function Home() {
+export default function LockedHome() {
   return (
-    <>
-      {/* Global atmospheric layers — fixed, derrière tout */}
-      <AmbientCanvas />
-      <GlobalTexture />
-      <CustomCursor />
-
-      {/* Navbar hors du <main> → root stacking context → iOS safe */}
-      <Navbar />
-
-      <main style={{ position: "relative", zIndex: 1 }}>
-        {/* GSAPConfig en premier enfant — config avant les ScrollTriggers */}
-        <GSAPConfig />
-
-        <HeroSection />
-
-        {/* TODO: <CraftSection />        */}
-        {/* TODO: <GallerySection />      */}
-        {/* TODO: <TrustSection />        */}
-        {/* TODO: <ContactSection />      */}
-
-        <Footer />
-      </main>
-    </>
+    <main
+      style={{
+        minHeight:       "100vh",
+        display:         "flex",
+        alignItems:      "center",
+        justifyContent:  "center",
+        backgroundColor: "#0C0B09",
+        color:           "rgba(216,210,200,0.4)",
+      }}
+    >
+      <p className="font-data text-xs tracking-[0.4em] uppercase">
+        Access Reserved
+      </p>
+    </main>
   );
 }

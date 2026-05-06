@@ -25,10 +25,13 @@ const jetbrains = JetBrains_Mono({
   weight: ["400", "500"],
 });
 
+/**
+ * Root metadata — generic fallback. Per-prospect [slug]/page.tsx overrides
+ * via generateMetadata with the cabinet name + city.
+ */
 export const metadata: Metadata = {
-  title: "[Cabinet] — Cosmetic Dentistry in [City]",
-  description:
-    "Premium cosmetic dentistry in [City]. Veneers, implants, smile design — crafted with precision by [Dr. Nom]. Schedule your consultation today.",
+  title:       "Cosmetic Dentistry — Crafted with Precision",
+  description: "Premium cosmetic and restorative dentistry. Veneers, implants, smile design — crafted with the precision of an atelier.",
 };
 
 export default function RootLayout({
