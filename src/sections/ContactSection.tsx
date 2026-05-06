@@ -4,6 +4,7 @@ import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import ScrollTrigger from "gsap/ScrollTrigger";
 import { Phone, Mail, MapPin, Clock, ArrowRight, Check } from "lucide-react";
+import CharText from "@/components/shared/CharText";
 import type { CompanyData } from "@/lib/types";
 
 /**
@@ -44,18 +45,23 @@ export default function ContactSection({ company }: { company: CompanyData }) {
     () => {
       gsap.registerPlugin(ScrollTrigger);
 
-      gsap.set(".contact-header", { opacity: 0, y: 30 });
-      gsap.set(".contact-form",   { opacity: 0, y: 50 });
-      gsap.set(".contact-rail",   { opacity: 0, y: 50 });
+      gsap.set(".contact-eyebrow", { opacity: 0, y: 20 });
+      gsap.set(".contact-lede",    { opacity: 0, y: 20 });
+      gsap.set(".char-reveal",     { y: "115%", opacity: 0 });
+      gsap.set(".contact-form",    { opacity: 0, y: 50 });
+      gsap.set(".contact-rail",    { opacity: 0, y: 50 });
 
       ScrollTrigger.create({
         trigger: sectionRef.current,
         start:   "top 82%",
         once:    true,
         onEnter: () => {
-          gsap.to(".contact-header", { opacity: 1, y: 0, duration: 0.8, ease: "power3.out" });
-          gsap.to(".contact-form",   { opacity: 1, y: 0, duration: 0.9, ease: "power3.out", delay: 0.2 });
-          gsap.to(".contact-rail",   { opacity: 1, y: 0, duration: 0.9, ease: "power3.out", delay: 0.35 });
+          const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
+          tl.to(".contact-eyebrow", { opacity: 1, y: 0, duration: 0.6 }, 0)
+            .to(".char-reveal",     { y: "0%", opacity: 1, duration: 0.85, stagger: 0.022 }, 0.15)
+            .to(".contact-lede",    { opacity: 1, y: 0, duration: 0.7 }, 0.7)
+            .to(".contact-form",    { opacity: 1, y: 0, duration: 0.9 }, 0.5)
+            .to(".contact-rail",    { opacity: 1, y: 0, duration: 0.9 }, 0.65);
         },
       });
     },
@@ -102,8 +108,8 @@ export default function ContactSection({ company }: { company: CompanyData }) {
       <div className="relative max-w-7xl mx-auto px-5 lg:px-8">
 
         {/* ── Header ────────────────────────────────────────────── */}
-        <div className="contact-header mb-16 lg:mb-20 max-w-3xl">
-          <div className="flex items-center gap-3 mb-6">
+        <div className="mb-16 lg:mb-20 max-w-3xl">
+          <div className="contact-eyebrow flex items-center gap-3 mb-6">
             <div className="w-6 h-px" style={{ backgroundColor: "#C9A048" }} />
             <span className="font-data text-[11px] tracking-[0.3em] uppercase"
               style={{ color: "rgba(201,160,72,0.75)" }}>
@@ -112,10 +118,14 @@ export default function ContactSection({ company }: { company: CompanyData }) {
           </div>
           <h2 className="font-heading text-[clamp(2.4rem,6vw,5.5rem)] leading-[0.92] font-extrabold mb-6"
             style={{ color: "#D8D2C8" }}>
-            Begin your<br />
-            <span className="italic" style={{ color: "#C9A048" }}>journey.</span>
+            <span className="block overflow-hidden" style={{ paddingTop: "0.05em", paddingBottom: "0.08em" }}>
+              <CharText text="Begin your" />
+            </span>
+            <span className="block overflow-hidden italic" style={{ color: "#C9A048", paddingTop: "0.05em", paddingBottom: "0.12em" }}>
+              <CharText text="journey." />
+            </span>
           </h2>
-          <p className="text-base leading-relaxed max-w-xl"
+          <p className="contact-lede text-base leading-relaxed max-w-xl"
             style={{ color: "rgba(216,210,200,0.45)" }}>
             A consultation begins with a conversation — not a form.
             Tell us a little, and the practice will reach out to schedule

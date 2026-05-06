@@ -4,6 +4,7 @@ import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import ScrollTrigger from "gsap/ScrollTrigger";
 import { Gem, Pencil, Anchor, Sun, AlignJustify, Brush, ArrowRight } from "lucide-react";
+import CharText from "@/components/shared/CharText";
 import type { CompanyData } from "@/lib/types";
 
 /**
@@ -91,23 +92,23 @@ export default function CraftSection({ company }: { company: CompanyData }) {
     () => {
       gsap.registerPlugin(ScrollTrigger);
 
-      gsap.set(".craft-header", { opacity: 0, y: 30 });
-      gsap.set(".craft-card",   { opacity: 0, y: 50, scale: 0.97 });
+      /* Header: eyebrow + paragraph fade in, but the H2 reveals
+         CHARACTER BY CHARACTER for editorial weight. */
+      gsap.set(".craft-eyebrow",  { opacity: 0, y: 20 });
+      gsap.set(".craft-lede",     { opacity: 0, y: 20 });
+      gsap.set(".char-reveal",    { y: "115%", opacity: 0 });
+      gsap.set(".craft-card",     { opacity: 0, y: 50, scale: 0.97 });
 
       ScrollTrigger.create({
         trigger: sectionRef.current,
         start:   "top 82%",
         once:    true,
         onEnter: () => {
-          gsap.to(".craft-header", {
-            opacity: 1, y: 0,
-            duration: 0.8, ease: "power3.out",
-          });
-          gsap.to(".craft-card", {
-            opacity: 1, y: 0, scale: 1,
-            duration: 0.9, stagger: 0.08,
-            ease: "power3.out", delay: 0.2,
-          });
+          const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
+          tl.to(".craft-eyebrow", { opacity: 1, y: 0, duration: 0.6 }, 0)
+            .to(".char-reveal",   { y: "0%", opacity: 1, duration: 0.85, stagger: 0.022 }, 0.15)
+            .to(".craft-lede",    { opacity: 1, y: 0, duration: 0.7 }, 0.7)
+            .to(".craft-card",    { opacity: 1, y: 0, scale: 1, duration: 0.9, stagger: 0.08 }, 0.5);
         },
       });
     },
@@ -159,8 +160,8 @@ export default function CraftSection({ company }: { company: CompanyData }) {
       <div className="relative max-w-7xl mx-auto px-5 lg:px-8">
 
         {/* ── Header ────────────────────────────────────────────────── */}
-        <div className="craft-header mb-16 lg:mb-20 max-w-3xl">
-          <div className="flex items-center gap-3 mb-6">
+        <div className="mb-16 lg:mb-20 max-w-3xl">
+          <div className="craft-eyebrow flex items-center gap-3 mb-6">
             <div className="w-6 h-px" style={{ backgroundColor: "#C9A048" }} />
             <span className="font-data text-[11px] tracking-[0.3em] uppercase"
               style={{ color: "rgba(201,160,72,0.75)" }}>
@@ -169,10 +170,14 @@ export default function CraftSection({ company }: { company: CompanyData }) {
           </div>
           <h2 className="font-heading text-[clamp(2.4rem,6vw,5.5rem)] leading-[0.92] font-extrabold mb-6"
             style={{ color: "#D8D2C8" }}>
-            Six disciplines.<br />
-            <span className="italic" style={{ color: "#C9A048" }}>One atelier.</span>
+            <span className="block overflow-hidden" style={{ paddingTop: "0.05em", paddingBottom: "0.08em" }}>
+              <CharText text="Six disciplines." />
+            </span>
+            <span className="block overflow-hidden italic" style={{ color: "#C9A048", paddingTop: "0.05em", paddingBottom: "0.12em" }}>
+              <CharText text="One atelier." />
+            </span>
           </h2>
-          <p className="text-base leading-relaxed max-w-xl"
+          <p className="craft-lede text-base leading-relaxed max-w-xl"
             style={{ color: "rgba(216,210,200,0.45)" }}>
             Every treatment is designed in-house, by the same hands that perform it.
             No outsourced labs, no rotating clinicians — just the consistency that

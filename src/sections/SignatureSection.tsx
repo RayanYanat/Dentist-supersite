@@ -4,6 +4,7 @@ import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import ScrollTrigger from "gsap/ScrollTrigger";
 import { STATS, CERTIFS } from "@/lib/constants";
+import CharText from "@/components/shared/CharText";
 import type { CompanyData } from "@/lib/types";
 
 /**
@@ -49,20 +50,25 @@ export default function SignatureSection({ company }: { company: CompanyData }) 
     () => {
       gsap.registerPlugin(ScrollTrigger);
 
-      gsap.set(".sig-header",   { opacity: 0, y: 30 });
+      gsap.set(".sig-eyebrow",  { opacity: 0, y: 20 });
+      gsap.set(".sig-lede",     { opacity: 0, y: 20 });
+      gsap.set(".char-reveal",  { y: "115%", opacity: 0 });
       gsap.set(".sig-stat",     { opacity: 0, y: 30 });
       gsap.set(".sig-cert-row", { opacity: 0, y: 20 });
       gsap.set(".sig-voice",    { opacity: 0, y: 40 });
       gsap.set(".sig-divider",  { scaleX: 0, transformOrigin: "left center" });
       gsap.set(".sig-sign",     { opacity: 0 });
 
-      /* Header reveal */
+      /* Header — eyebrow → char cascade → lede */
       ScrollTrigger.create({
         trigger: sectionRef.current,
         start:   "top 82%",
         once:    true,
         onEnter: () => {
-          gsap.to(".sig-header", { opacity: 1, y: 0, duration: 0.8, ease: "power3.out" });
+          const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
+          tl.to(".sig-eyebrow", { opacity: 1, y: 0, duration: 0.6 }, 0)
+            .to(".char-reveal", { y: "0%", opacity: 1, duration: 0.85, stagger: 0.022 }, 0.15)
+            .to(".sig-lede",    { opacity: 1, y: 0, duration: 0.7 }, 0.7);
         },
       });
 
@@ -170,8 +176,8 @@ export default function SignatureSection({ company }: { company: CompanyData }) 
       <div className="relative max-w-7xl mx-auto px-5 lg:px-8">
 
         {/* ── Header ────────────────────────────────────────────── */}
-        <div className="sig-header mb-16 lg:mb-24 max-w-3xl">
-          <div className="flex items-center gap-3 mb-6">
+        <div className="mb-16 lg:mb-24 max-w-3xl">
+          <div className="sig-eyebrow flex items-center gap-3 mb-6">
             <div className="w-6 h-px" style={{ backgroundColor: "#C9A048" }} />
             <span className="font-data text-[11px] tracking-[0.3em] uppercase"
               style={{ color: "rgba(201,160,72,0.75)" }}>
@@ -180,10 +186,14 @@ export default function SignatureSection({ company }: { company: CompanyData }) 
           </div>
           <h2 className="font-heading text-[clamp(2.4rem,6vw,5.5rem)] leading-[0.92] font-extrabold mb-6"
             style={{ color: "#D8D2C8" }}>
-            By the numbers,<br />
-            <span className="italic" style={{ color: "#C9A048" }}>by the hand.</span>
+            <span className="block overflow-hidden" style={{ paddingTop: "0.05em", paddingBottom: "0.08em" }}>
+              <CharText text="By the numbers," />
+            </span>
+            <span className="block overflow-hidden italic" style={{ color: "#C9A048", paddingTop: "0.05em", paddingBottom: "0.12em" }}>
+              <CharText text="by the hand." />
+            </span>
           </h2>
-          <p className="text-base leading-relaxed max-w-xl"
+          <p className="sig-lede text-base leading-relaxed max-w-xl"
             style={{ color: "rgba(216,210,200,0.45)" }}>
             Every result is recorded, reviewed, and signed.
             What follows is not advertising — it is the audit trail.
