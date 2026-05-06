@@ -7,6 +7,7 @@ import AmbientCanvas from "@/components/shared/AmbientCanvas";
 import CustomCursor  from "@/components/shared/CustomCursor";
 import GlobalTexture from "@/components/shared/GlobalTexture";
 import GSAPConfig    from "@/components/shared/GSAPConfig";
+import VisitTracker  from "@/components/shared/VisitTracker";
 import Navbar        from "@/components/layout/Navbar";
 import Footer        from "@/components/layout/Footer";
 import HeroSection   from "@/sections/HeroSection";
@@ -85,6 +86,9 @@ export default async function SlugPage({
       <AmbientCanvas />
       <GlobalTexture />
       <CustomCursor />
+
+      {/* Visit tracking — fires a single POST per browser load (post-ISR) */}
+      <VisitTracker slug={slug} />
 
       {/* Navbar outside <main> → root stacking context → iOS safe */}
       <Navbar company={company} />
