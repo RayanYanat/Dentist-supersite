@@ -1,5 +1,6 @@
 "use client";
 import { useRef, useEffect } from "react";
+import Image from "next/image";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import { Phone, ArrowRight } from "lucide-react";
@@ -7,27 +8,34 @@ import { STATS } from "@/lib/constants";
 import type { CompanyData } from "@/lib/types";
 
 /**
- * Hero — "Atelier Blueprint"
+ * Hero — "Dual Register" v3
  *
- * Premise reset: the previous hero relied on a barely-visible Unsplash
- * smile photo (opacity 0.18) plus an anaemic spotlight (0.13). Both signals
- * read as "template hesitating to commit". Both were cut.
+ * Lessons from v1 (photo at 0.18 — ghost) and v2 (no photo — spotlight had
+ * nothing to illuminate): the spotlight effect needs a real subject to land,
+ * AND the photo needs enough presence (opacity) to feel intentional.
  *
- * The new hero is a TECHNICAL DRAWING. The composition treats the page as
- * a master craftsman's specification sheet:
+ * v3 composition: the photo is a TRUE PRESENCE — full-bleed cover, 0.72
+ * opacity, occupying the right two-thirds of the hero. The left third
+ * fades to obsidian via gradient mask, hosting the typography. The
+ * spotlight cursor now genuinely brightens the smile photograph as it
+ * passes over it (mix-blend: screen + 0.45 peak gold light).
  *
- *   - Massive Playfair typography that enters CHARACTER BY CHARACTER from
- *     below a clipping mask (no SplitText paid plugin — manual span split)
- *   - SVG precision lines that DRAW THEMSELVES via stroke-dashoffset
- *     animation — corner crosshairs, golden-ratio measurement bar under the
- *     title, an organic "smile arc" curve along the bottom
- *   - Reference annotations in the four corners (font-mono, atelier voice)
- *     suggesting this is page 01/04 of a bound dossier
- *   - A spotlight cursor x4 stronger than before (0.42 vs 0.13) that now
- *     genuinely "illuminates" the precision marks as it passes over them
+ * Layered from back to front:
+ *   1. Photo (Unsplash, 0.72 opacity, warm filter, slight scale)
+ *   2. Gradient masks — vertical (top + bottom fade to obsidian) and
+ *      horizontal (left fade to obsidian for text legibility)
+ *   3. Atelier grid overlay (almost imperceptible)
+ *   4. Atmospheric gold glow centered behind the title
+ *   5. SVG precision marks (crosshairs, golden ratio, smile arc)
+ *   6. Spotlight cursor — the inspection lamp
+ *   7. Vignette
+ *   8. Content layer — typography, CTAs, stats
  *
- * Restraint with one bold gesture: the typography. Every other element is
- * subordinate — hairlines, faint glows, monospaced labels under 12px.
+ * This is the wow that v1 was meant to deliver but never could: the page
+ * loads → a luminous portrait emerges from darkness → the title
+ * assembles character by character → measurement marks draw themselves
+ * around the composition → and as you move your cursor, the photo
+ * lights up where you point. ~3 seconds of precise choreography.
  */
 
 /* ── Char split helper — wraps each character in a span for stagger anim ─── */
@@ -62,6 +70,9 @@ export default function HeroSection({ company }: { company: CompanyData }) {
    * ───────────────────────────────────────────────────────────────────── */
   useGSAP(
     () => {
+      /* Photo emerges first — sets the stage. Initial state: zoomed in,
+         dark, slightly desaturated. GSAP zooms out + brightens it on enter. */
+      gsap.set(".hero-photo-wrap", { opacity: 0, scale: 1.12 });
       gsap.set(".hero-char",       { y: "115%", opacity: 0 });
       gsap.set(".hero-eyebrow",    { opacity: 0, y: 12 });
       gsap.set(".hero-ref",        { opacity: 0 });
@@ -80,25 +91,28 @@ export default function HeroSection({ company }: { company: CompanyData }) {
       const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
 
       tl
-        /* Frame establishes itself first — like a draftsman setting up paper */
-        .to(".hero-cross",   { opacity: 0.55, scale: 1, duration: 0.5, stagger: 0.07 }, 0)
-        .to(".hero-ref",     { opacity: 1, duration: 0.5, stagger: 0.07 }, 0.1)
-        .to(".hero-hairline",{ scaleX: 1, duration: 1.0, ease: "expo.out", stagger: 0.08 }, 0.2)
-        /* Eyebrow + flourish in parallel */
-        .to(".hero-eyebrow", { opacity: 1, y: 0, duration: 0.6 }, 0.5)
-        .to(".hero-flourish",{ strokeDashoffset: 0, opacity: 0.45, duration: 1.8, ease: "power2.inOut" }, 0.5)
-        /* Title — character cascade */
-        .to(".hero-char",    { y: "0%", opacity: 1, duration: 0.9, stagger: 0.025, ease: "power3.out" }, 0.7)
+        /* Photo emerges from darkness — the page has a SUBJECT before
+           the title even appears. 1.6s slow zoom-out for cinematic feel. */
+        .to(".hero-photo-wrap", { opacity: 1, scale: 1, duration: 1.6, ease: "power2.out" }, 0)
+        /* Frame establishes itself in parallel — like a draftsman setting up paper */
+        .to(".hero-cross",   { opacity: 0.55, scale: 1, duration: 0.5, stagger: 0.07 }, 0.3)
+        .to(".hero-ref",     { opacity: 1, duration: 0.5, stagger: 0.07 }, 0.4)
+        .to(".hero-hairline",{ scaleX: 1, duration: 1.0, ease: "expo.out", stagger: 0.08 }, 0.5)
+        /* Eyebrow + flourish */
+        .to(".hero-eyebrow", { opacity: 1, y: 0, duration: 0.6 }, 0.7)
+        .to(".hero-flourish",{ strokeDashoffset: 0, opacity: 0.45, duration: 1.8, ease: "power2.inOut" }, 0.7)
+        /* Title — character cascade, the climax */
+        .to(".hero-char",    { y: "0%", opacity: 1, duration: 0.9, stagger: 0.025, ease: "power3.out" }, 0.9)
         /* Measurement bar draws after most of the title is up */
-        .to(".hero-meas-path", { strokeDashoffset: 0, duration: 1.4, ease: "power2.inOut" }, 1.6)
-        .to(".hero-meas-tick", { scaleY: 1, duration: 0.4, stagger: 0.12 }, 2.6)
-        .to(".hero-meas-label",{ opacity: 0.7, duration: 0.6 }, 2.8)
+        .to(".hero-meas-path", { strokeDashoffset: 0, duration: 1.4, ease: "power2.inOut" }, 1.8)
+        .to(".hero-meas-tick", { scaleY: 1, duration: 0.4, stagger: 0.12 }, 2.8)
+        .to(".hero-meas-label",{ opacity: 0.7, duration: 0.6 }, 3.0)
         /* Sub + CTAs land last */
-        .to(".hero-sub",       { opacity: 1, y: 0, duration: 0.5 }, 2.4)
-        .to(".hero-cta",       { opacity: 1, y: 0, duration: 0.5, stagger: 0.1 }, 2.6)
-        .to(".hero-data-strip",{ opacity: 1, duration: 0.6 }, 3.0)
-        .to(".hero-stats",     { opacity: 1, y: 0, duration: 0.6 }, 3.1)
-        .to(".hero-scroll",    { opacity: 1, duration: 0.7 }, 3.3);
+        .to(".hero-sub",       { opacity: 1, y: 0, duration: 0.5 }, 2.6)
+        .to(".hero-cta",       { opacity: 1, y: 0, duration: 0.5, stagger: 0.1 }, 2.8)
+        .to(".hero-data-strip",{ opacity: 1, duration: 0.6 }, 3.2)
+        .to(".hero-stats",     { opacity: 1, y: 0, duration: 0.6 }, 3.3)
+        .to(".hero-scroll",    { opacity: 1, duration: 0.7 }, 3.5);
     },
     { scope: containerRef }
   );
@@ -124,12 +138,15 @@ export default function HeroSection({ company }: { company: CompanyData }) {
       const x = e.clientX - rect.left;
       const y = e.clientY - rect.top;
 
+      /* Two-stop gradient: pearl bright core that genuinely lights up the
+         photo via mix-blend: screen, surrounded by a warmer gold halo. */
       spot.style.background = `radial-gradient(
-        700px circle at ${x}px ${y}px,
-        rgba(201,160,72,0.42) 0%,
-        rgba(201,160,72,0.22) 22%,
-        rgba(240,234,224,0.08) 48%,
-        transparent 75%
+        900px circle at ${x}px ${y}px,
+        rgba(240,234,224,0.55) 0%,
+        rgba(217,178,92,0.38)  14%,
+        rgba(201,160,72,0.20)  32%,
+        rgba(201,160,72,0.06)  55%,
+        transparent            75%
       )`;
       spot.style.opacity = "1";
 
@@ -164,11 +181,71 @@ export default function HeroSection({ company }: { company: CompanyData }) {
       className="relative min-h-screen flex flex-col overflow-hidden"
       style={{ backgroundColor: "#0C0B09" }}
     >
-      {/* ── Layer 1 — atmospheric background ─────────────────────────── */}
+      {/* ── Layer 1 — Photo + atmospheric background ─────────────────────
+       * Photo occupies the right two-thirds. A horizontal gradient mask
+       * fades it to obsidian on the left so the typography keeps its
+       * contrast. Vertical fades soften top + bottom edges.
+       * ─────────────────────────────────────────────────────────────── */}
       <div
         ref={layer1Ref}
         className="absolute inset-0 will-change-transform pointer-events-none"
       >
+        {/* Hero photograph — the SUBJECT.
+            Right-anchored cover; the spotlight cursor will illuminate it. */}
+        <div
+          className="hero-photo-wrap absolute inset-0"
+          style={{ willChange: "transform, opacity" }}
+        >
+          <Image
+            src="https://images.unsplash.com/photo-1606811971618-4486d14f3f99?auto=format&fit=crop&w=2000&q=85"
+            alt=""
+            fill
+            sizes="100vw"
+            priority
+            className="object-cover"
+            style={{
+              objectPosition:    "75% center",
+              opacity:           0.72,
+              filter:            "brightness(0.95) contrast(1.05) saturate(0.92) sepia(0.06)",
+              transform:         "scale(1.02)",
+            }}
+          />
+          {/* Gradient mask — left fades to obsidian so the type is legible.
+              Stronger on mobile (full opacity early) since text overlays photo. */}
+          <div
+            className="absolute inset-0"
+            style={{
+              background: `
+                linear-gradient(
+                  to right,
+                  rgba(12,11,9,0.96) 0%,
+                  rgba(12,11,9,0.85) 25%,
+                  rgba(12,11,9,0.55) 50%,
+                  rgba(12,11,9,0.25) 75%,
+                  rgba(12,11,9,0.10) 100%
+                )
+              `,
+            }}
+          />
+          {/* Vertical fades — top + bottom blend into surrounding obsidian */}
+          <div
+            className="absolute inset-0"
+            style={{
+              background: `
+                linear-gradient(
+                  to bottom,
+                  #0C0B09 0%,
+                  rgba(12,11,9,0.4) 12%,
+                  transparent 30%,
+                  transparent 70%,
+                  rgba(12,11,9,0.5) 88%,
+                  #0C0B09 100%
+                )
+              `,
+            }}
+          />
+        </div>
+
         {/* Atelier grid — barely there */}
         <div
           className="absolute inset-0"
@@ -180,20 +257,13 @@ export default function HeroSection({ company }: { company: CompanyData }) {
             backgroundSize: "72px 72px",
           }}
         />
-        {/* Central gold breath */}
+        {/* Central gold breath — anchored beneath title for warmth */}
         <div
-          className="absolute bottom-[-15%] left-1/2 -translate-x-1/2 w-[1200px] h-[800px] rounded-full"
+          className="absolute bottom-[5%] left-[20%] w-[900px] h-[700px] rounded-full"
           style={{
-            background: "radial-gradient(ellipse at center, rgba(201,160,72,0.18) 0%, rgba(142,110,40,0.07) 38%, transparent 70%)",
+            background: "radial-gradient(ellipse at center, rgba(201,160,72,0.16) 0%, rgba(142,110,40,0.06) 38%, transparent 70%)",
             animation: "breathe-gold 9s ease-in-out infinite",
-          }}
-        />
-        {/* Pearl accent — top right */}
-        <div
-          className="absolute top-[-15%] right-[5%] w-[700px] h-[600px] rounded-full"
-          style={{
-            background: "radial-gradient(ellipse at center, rgba(240,234,224,0.05) 0%, transparent 65%)",
-            animation: "breathe-gold 13s ease-in-out infinite 3s",
+            mixBlendMode: "screen",
           }}
         />
       </div>
