@@ -7,6 +7,7 @@ import AmbientCanvas from "@/components/shared/AmbientCanvas";
 import CustomCursor  from "@/components/shared/CustomCursor";
 import GlobalTexture from "@/components/shared/GlobalTexture";
 import GSAPConfig    from "@/components/shared/GSAPConfig";
+import SmoothScroll  from "@/components/shared/SmoothScroll";
 import VisitTracker  from "@/components/shared/VisitTracker";
 import Navbar        from "@/components/layout/Navbar";
 import Footer        from "@/components/layout/Footer";
@@ -86,6 +87,9 @@ export default async function SlugPage({
 
   return (
     <>
+      {/* Smooth scroll — desktop only, respects reduced-motion */}
+      <SmoothScroll />
+
       {/* Global atmospheric layers — fixed, behind everything */}
       <AmbientCanvas />
       <GlobalTexture />
