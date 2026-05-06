@@ -100,7 +100,7 @@
   }
 }
 
-/* ── Hero initial states — FOUC prevention ───────────────────────────────────
+/* ── FOUC prevention — initial states for animated elements ──────────────────
  * Invisible via CSS dès le SSR HTML. GSAP override au bon moment.
  * Sans ça : flash ~300ms visible sur premier chargement (bundle pas en cache).
  * ────────────────────────────────────────────────────────────────────────── */
@@ -115,6 +115,24 @@
 .hero-stats,
 .hero-frame {
   opacity: 0;
+}
+
+/* LockedScreen — / route */
+.ls-bracket,
+.ls-badge,
+.ls-mark,
+.ls-sub,
+.ls-strip {
+  opacity: 0;
+}
+.ls-divider {
+  transform: scaleX(0);
+  transform-origin: left center;
+}
+/* Titles stay visible but are clipped horizontally — scan-reveal */
+.ls-title-1,
+.ls-title-2 {
+  clip-path: inset(0% 100% 0% 0%);
 }
 
 /* ── Keyframes ──────────────────────────────────────────────────────────── */
