@@ -14,6 +14,7 @@ import HeroSection      from "@/sections/HeroSection";
 import CraftSection     from "@/sections/CraftSection";
 import GallerySection   from "@/sections/GallerySection";
 import SignatureSection from "@/sections/SignatureSection";
+import ContactSection   from "@/sections/ContactSection";
 
 /* ── ISR config ────────────────────────────────────────────────────────────
  * dynamicParams = true  → slugs not in generateStaticParams are rendered
@@ -104,8 +105,7 @@ export default async function SlugPage({
         <CraftSection     company={company} />
         <GallerySection   company={company} />
         <SignatureSection company={company} />
-
-        {/* TODO: <ContactSection    company={company} /> — #contact         */}
+        <ContactSection   company={company} />
 
         <Footer company={company} />
       </main>
