@@ -105,15 +105,29 @@
  * Sans ça : flash ~300ms visible sur premier chargement (bundle pas en cache).
  * ────────────────────────────────────────────────────────────────────────── */
 .hero-eyebrow,
-.hero-title-1,
-.hero-title-2,
-.hero-title-3,
-.hero-divider,
+.hero-ref,
+.hero-cross,
 .hero-sub,
 .hero-cta,
 .hero-scroll,
 .hero-stats,
-.hero-frame {
+.hero-data-strip,
+.hero-flourish,
+.hero-meas-label {
+  opacity: 0;
+}
+.hero-hairline {
+  transform: scaleX(0);
+}
+.hero-meas-tick {
+  transform: scaleY(0);
+}
+/* Title characters — clipped below their parent (overflow:hidden in JSX),
+   GSAP raises them via translateY. opacity:0 prevents the brief flash before
+   the chars are positioned by GSAP on hydration. */
+.hero-char {
+  display: inline-block;
+  transform: translateY(115%);
   opacity: 0;
 }
 
