@@ -27,15 +27,36 @@
 }
 
 :root {
-  /* ── Atelier Palette ──────────────────────────────────── */
-  --background:        #0C0B09;   /* obsidien chaud */
+  /* ── Atelier Palette — Dual Register ──────────────────────────────
+   * The DA is no longer a single dark register. Sections alternate:
+   *   Hero / Gallery / Contact  → DARK   (drama, intimacy, gravity)
+   *   Craft / Signature         → LIGHT  (warmth, trust, accessibility)
+   * Gold is the bridge — it belongs to both registers with equal weight.
+   * ──────────────────────────────────────────────────────────────── */
+
+  /* Dark register (hero / gallery / contact) */
+  --background:        #0C0B09;   /* obsidien chaud — root html bg */
   --foreground:        #D8D2C8;   /* beige cassé */
-  --gold:              #C9A048;   /* or doux */
-  --gold-dim:          #8E6E28;
-  --pearl:             #F0EAE0;   /* ivoire */
   --surface:           #141210;
   --surface-elevated:  #1C1A16;
-  --border-subtle:     rgba(201, 160, 72, 0.12);
+
+  /* Light register (craft / signature) */
+  --bg-light:          #F7F4EE;   /* ivoire chaud — la couleur de la dent parfaite */
+  --bg-light-elevated: #FFFFFF;   /* white card, premium paper */
+  --bg-light-soft:     #EFE9DD;   /* subtle warm panel */
+  --fg-light:          #1A1612;   /* noir chaud — jamais noir pur, lit comme encre */
+  --fg-light-muted:    #6B6358;   /* terre chaude */
+  --fg-light-soft:     rgba(26, 22, 18, 0.55);
+
+  /* Bridge — gold sits identically on both registers */
+  --gold:              #C9A048;
+  --gold-dim:          #8E6E28;
+  --gold-warm:         #D9B25C;   /* hover state, slightly brighter */
+  --pearl:             #F0EAE0;
+
+  /* Borders — different opacity per register so gold reads correctly */
+  --border-subtle:     rgba(201, 160, 72, 0.12);  /* dark register */
+  --border-light:      rgba(201, 160, 72, 0.22);  /* light register, gold pops more */
   --text-muted:        #6B6358;
 
   /* shadcn compat */

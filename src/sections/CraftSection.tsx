@@ -120,41 +120,50 @@ export default function CraftSection({ company }: { company: CompanyData }) {
       ref={sectionRef}
       id="craft"
       className="relative section-padding overflow-hidden"
-      style={{ backgroundColor: "#0E0C0A" }}
+      style={{ backgroundColor: "#F7F4EE" }}     /* ── LIGHT REGISTER ── */
+                                                 /* warm ivory — the
+                                                    color of the perfect
+                                                    tooth. After the
+                                                    obsidian hero, the
+                                                    page opens. */
     >
-      {/* ── Atelier grid texture ─────────────────────────────────────── */}
+      {/* ── Subtle gold paper grid — visible enough on ivory to feel
+              like premium printed stock without screaming. ───────────── */}
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
           backgroundImage: `
-            linear-gradient(rgba(201,160,72,0.018) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(201,160,72,0.018) 1px, transparent 1px)
+            linear-gradient(rgba(201,160,72,0.04) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(201,160,72,0.04) 1px, transparent 1px)
           `,
           backgroundSize: "72px 72px",
         }}
       />
 
-      {/* ── Ambient gold glows ───────────────────────────────────────── */}
+      {/* ── Warm panel breath — soft cream wash, not gold halo.
+              On a light bg, gold radial gradients muddy. We use a barely
+              visible warm-on-warm panel that gently moves. ──────────── */}
       <div
-        className="absolute -left-48 top-1/4 w-[600px] h-[600px] rounded-full pointer-events-none"
+        className="absolute -left-48 top-1/4 w-[700px] h-[700px] rounded-full pointer-events-none"
         style={{
-          background: "radial-gradient(ellipse at center, rgba(201,160,72,0.09) 0%, transparent 62%)",
-          animation:  "breathe-gold 12s ease-in-out infinite",
+          background: "radial-gradient(ellipse at center, rgba(217,178,92,0.12) 0%, transparent 60%)",
+          animation:  "breathe-gold 14s ease-in-out infinite",
+          mixBlendMode: "multiply",
         }}
       />
       <div
-        className="absolute -right-32 bottom-1/4 w-[500px] h-[500px] rounded-full pointer-events-none"
+        className="absolute -right-32 bottom-1/4 w-[600px] h-[600px] rounded-full pointer-events-none"
         style={{
-          background:     "radial-gradient(ellipse at center, rgba(240,234,224,0.05) 0%, transparent 62%)",
-          animation:      "breathe-gold 16s ease-in-out infinite reverse",
+          background:     "radial-gradient(ellipse at center, rgba(26,22,18,0.04) 0%, transparent 65%)",
+          animation:      "breathe-gold 18s ease-in-out infinite reverse",
           animationDelay: "4s",
         }}
       />
 
-      {/* ── Top hairline ─────────────────────────────────────────────── */}
+      {/* ── Top hairline — gold edge marking the sombre→clair boundary ── */}
       <div
         className="absolute top-0 left-0 right-0 h-px"
-        style={{ background: "linear-gradient(to right, transparent, rgba(201,160,72,0.3), transparent)" }}
+        style={{ background: "linear-gradient(to right, transparent, rgba(201,160,72,0.55), transparent)" }}
       />
 
       <div className="relative max-w-7xl mx-auto px-5 lg:px-8">
@@ -164,12 +173,12 @@ export default function CraftSection({ company }: { company: CompanyData }) {
           <div className="craft-eyebrow flex items-center gap-3 mb-6">
             <div className="w-6 h-px" style={{ backgroundColor: "#C9A048" }} />
             <span className="font-data text-[11px] tracking-[0.3em] uppercase"
-              style={{ color: "rgba(201,160,72,0.75)" }}>
+              style={{ color: "#8E6E28" }}>
               Our Craft
             </span>
           </div>
           <h2 className="font-heading text-[clamp(2.4rem,6vw,5.5rem)] leading-[0.92] font-extrabold mb-6"
-            style={{ color: "#D8D2C8" }}>
+            style={{ color: "#1A1612" }}>
             <span className="block overflow-hidden" style={{ paddingTop: "0.05em", paddingBottom: "0.08em" }}>
               <CharText text="Six disciplines." />
             </span>
@@ -178,14 +187,14 @@ export default function CraftSection({ company }: { company: CompanyData }) {
             </span>
           </h2>
           <p className="craft-lede text-base leading-relaxed max-w-xl"
-            style={{ color: "rgba(216,210,200,0.45)" }}>
+            style={{ color: "rgba(26,22,18,0.6)" }}>
             Every treatment is designed in-house, by the same hands that perform it.
             No outsourced labs, no rotating clinicians — just the consistency that
             comes from a single atelier.
           </p>
         </div>
 
-        {/* ── 3-column grid ─────────────────────────────────────────── */}
+        {/* ── 3-column grid — cards now feel like premium paper stock ── */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {SERVICES.map((svc) => {
             const Icon = svc.icon;
@@ -194,31 +203,39 @@ export default function CraftSection({ company }: { company: CompanyData }) {
                 key={svc.num}
                 className="craft-card group relative flex flex-col p-8 lg:p-9 overflow-hidden transition-all duration-500"
                 style={{
-                  backgroundColor: "#141210",
+                  backgroundColor: "#FFFFFF",
                   border: svc.featured
-                    ? "1px solid rgba(201,160,72,0.35)"
-                    : "1px solid rgba(201,160,72,0.08)",
+                    ? "1px solid rgba(201,160,72,0.5)"
+                    : "1px solid rgba(201,160,72,0.18)",
+                  boxShadow: svc.featured
+                    ? "0 1px 0 rgba(201,160,72,0.05), 0 8px 24px rgba(26,22,18,0.04)"
+                    : "0 1px 0 rgba(201,160,72,0.04), 0 4px 14px rgba(26,22,18,0.03)",
                   minHeight: "26rem",
                 }}
                 onMouseEnter={(e) => {
                   const el = e.currentTarget as HTMLElement;
-                  el.style.borderColor = "rgba(201,160,72,0.5)";
-                  el.style.boxShadow   = "0 0 60px rgba(201,160,72,0.10)";
+                  el.style.borderColor = "rgba(201,160,72,0.7)";
+                  el.style.boxShadow   = "0 1px 0 rgba(201,160,72,0.12), 0 18px 50px rgba(26,22,18,0.10)";
+                  el.style.transform   = "translateY(-2px)";
                 }}
                 onMouseLeave={(e) => {
                   const el = e.currentTarget as HTMLElement;
                   el.style.borderColor = svc.featured
-                    ? "rgba(201,160,72,0.35)"
-                    : "rgba(201,160,72,0.08)";
-                  el.style.boxShadow = "none";
+                    ? "rgba(201,160,72,0.5)"
+                    : "rgba(201,160,72,0.18)";
+                  el.style.boxShadow   = svc.featured
+                    ? "0 1px 0 rgba(201,160,72,0.05), 0 8px 24px rgba(26,22,18,0.04)"
+                    : "0 1px 0 rgba(201,160,72,0.04), 0 4px 14px rgba(26,22,18,0.03)";
+                  el.style.transform   = "translateY(0)";
                 }}
               >
-                {/* Number watermark — engraved in the corner */}
+                {/* Number watermark — engraved in the corner.
+                    On light bg, gold needs a touch more opacity to read. */}
                 <span
                   className="absolute -top-4 -right-3 font-heading font-extrabold leading-none select-none pointer-events-none italic"
                   style={{
                     fontSize: "10rem",
-                    color:    "rgba(201,160,72,0.04)",
+                    color:    "rgba(201,160,72,0.09)",
                   }}
                 >
                   {svc.num}
@@ -227,37 +244,37 @@ export default function CraftSection({ company }: { company: CompanyData }) {
                 {/* Bottom hairline accent — reveals on hover */}
                 <div
                   className="absolute bottom-0 left-0 right-0 h-px opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-                  style={{ background: "linear-gradient(to right, transparent, rgba(201,160,72,0.6), transparent)" }}
+                  style={{ background: "linear-gradient(to right, transparent, rgba(201,160,72,0.7), transparent)" }}
                 />
 
                 {/* Top row — domain + icon */}
                 <div className="relative flex items-center justify-between mb-10">
                   <span className="font-data text-[10px] tracking-[0.32em] uppercase"
-                    style={{ color: "rgba(201,160,72,0.65)" }}>
+                    style={{ color: "#8E6E28" }}>
                     {svc.domain}
                   </span>
                   <div
                     className="w-11 h-11 flex items-center justify-center transition-colors duration-300"
                     style={{
-                      backgroundColor: "rgba(201,160,72,0.06)",
-                      border:          "1px solid rgba(201,160,72,0.14)",
+                      backgroundColor: "rgba(201,160,72,0.08)",
+                      border:          "1px solid rgba(201,160,72,0.28)",
                     }}
                   >
                     <Icon size={17} style={{ color: "#C9A048" }} />
                   </div>
                 </div>
 
-                {/* Headline — Playfair italic, atelier voice */}
+                {/* Headline — Playfair italic, deep warm ink color */}
                 <h3
                   className="relative font-heading text-[clamp(1.55rem,2.2vw,1.95rem)] leading-[1.05] font-bold mb-5"
-                  style={{ color: "#D8D2C8", textTransform: "none", letterSpacing: "-0.005em" }}
+                  style={{ color: "#1A1612", textTransform: "none", letterSpacing: "-0.005em" }}
                 >
                   {svc.headline}
                 </h3>
 
                 {/* Detail */}
                 <p className="relative text-sm leading-relaxed mb-7 flex-1"
-                  style={{ color: "rgba(216,210,200,0.42)" }}>
+                  style={{ color: "rgba(26,22,18,0.6)" }}>
                   {svc.detail}
                 </p>
 
@@ -268,8 +285,9 @@ export default function CraftSection({ company }: { company: CompanyData }) {
                       key={tag}
                       className="font-data text-[10px] tracking-wider uppercase px-2.5 py-1 transition-colors duration-300"
                       style={{
-                        color:  "rgba(201,160,72,0.6)",
-                        border: "1px solid rgba(201,160,72,0.15)",
+                        color:  "#8E6E28",
+                        border: "1px solid rgba(201,160,72,0.32)",
+                        backgroundColor: "rgba(201,160,72,0.04)",
                       }}
                     >
                       {tag}
@@ -281,9 +299,9 @@ export default function CraftSection({ company }: { company: CompanyData }) {
                 <a
                   href="#contact"
                   className="relative flex items-center gap-2.5 text-[11px] font-bold tracking-[0.22em] uppercase transition-colors duration-300 w-fit"
-                  style={{ color: "rgba(201,160,72,0.75)" }}
+                  style={{ color: "#8E6E28" }}
                   onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.color = "#C9A048")}
-                  onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.color = "rgba(201,160,72,0.75)")}
+                  onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.color = "#8E6E28")}
                 >
                   <span>{svc.cta}</span>
                   <ArrowRight size={12} className="group-hover:translate-x-1.5 transition-transform duration-200" />
@@ -295,12 +313,12 @@ export default function CraftSection({ company }: { company: CompanyData }) {
 
         {/* ── Bottom data strip ─────────────────────────────────────── */}
         <div className="mt-12 flex items-center gap-4">
-          <div className="flex-1 h-px" style={{ backgroundColor: "rgba(201,160,72,0.08)" }} />
+          <div className="flex-1 h-px" style={{ backgroundColor: "rgba(201,160,72,0.22)" }} />
           <p className="font-data text-[10px] tracking-[0.3em] uppercase text-center"
-            style={{ color: "rgba(216,210,200,0.3)" }}>
+            style={{ color: "rgba(26,22,18,0.45)" }}>
             Every Piece Designed In-House · Never Outsourced
           </p>
-          <div className="flex-1 h-px" style={{ backgroundColor: "rgba(201,160,72,0.08)" }} />
+          <div className="flex-1 h-px" style={{ backgroundColor: "rgba(201,160,72,0.22)" }} />
         </div>
       </div>
     </section>
