@@ -1,698 +1,410 @@
 "use client";
-import { useRef, useEffect } from "react";
+import { useRef } from "react";
 import Image from "next/image";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
+import ScrollTrigger from "gsap/ScrollTrigger";
 import { Phone, ArrowRight } from "lucide-react";
-import { STATS } from "@/lib/constants";
 import type { CompanyData } from "@/lib/types";
 
 /**
- * Hero — "Dark Room" v4
+ * Hero — Scene I "The Opening"
  *
- * The core mechanic: the portrait is always at full opacity, but buried
- * under a near-opaque dark overlay (rgba(12,11,9,0.92)). A CSS mask-image
- * controls WHERE the overlay shows — at cursor position, the mask is
- * transparent, so the overlay disappears and the smile emerges from
- * darkness. The cursor is a looking-glass, not a flashlight.
+ * The hero is no longer a "section the user scrolls past." It's a 350vh
+ * pinned scroll experience: 100vh of viewport + 250vh of vertical scroll
+ * during which the page itself doesn't move — the content does, driven
+ * by scroll progress (scrub: 1).
  *
- * Entry choreography (desktop, ~4s):
- *   0.0s — frame marks appear (crosshairs, ref labels, hairlines)
- *   0.8s — eyebrow + flourish arc
- *   1.0s — gray title chars cascade up (line 1)
- *   1.4s — gold title chars drift in from right (line 2, overlapping)
- *   1.4s — overlay auto-opens on the smile (cinematic reveal)
- *   2.2s — overlay peak — portrait fully visible
- *   2.7s — overlay starts to close
- *   1.9s — measurement bar draws
- *   2.7s — sub text + CTAs land
- *   3.4s — overlay fully closed → cursor interactive mode activates
- *   3.6s — scroll indicator
+ * Three beats:
  *
- * Mobile: overlay breathes open/close on the centered smile (no cursor).
+ *   BEAT 1  (0–25 %)  — The whisper
+ *     Black canvas. One italic line in the center: "We don't whiten teeth."
+ *     Then it fades and is replaced by: "We redesign faces."
  *
- * Layer stack (z-index):
- *   1  — photo (full opacity) + top/bottom vertical fades
- *   2  — atelier grid (barely there)
- *   3  — DARK OVERLAY — the core mechanic (mask-image controlled)
- *   4  — gold breath ambient + pearl glow (screen blend)
- *   5  — crosshairs, ref labels, hairlines (always visible frame)
- *   6  — flourish arc
- *   7  — vignette (edge framing)
- *   20 — content + scroll indicator
+ *   BEAT 2  (25–60 %) — The curtain
+ *     Two dark slabs (top half + bottom half of the viewport) slide apart —
+ *     top slides up off-screen, bottom slides down off-screen. The portrait
+ *     between them is revealed from the center outward, like elevator
+ *     doors opening on a face. Simultaneously the photo's scale settles
+ *     (1.18 → 1.0) and an atmospheric darkening lifts.
+ *
+ *   BEAT 3  (60–100 %) — The composition
+ *     The portrait, now fully exposed, becomes the canvas. A masthead title
+ *     ("L'Art du Sourire") fades in at bottom-left. Subtitle + CTAs slide
+ *     in below. The chapter indicator at top-left has been there the whole
+ *     time. A scroll cue invites the user into Scene II.
+ *
+ * Why pin + scrub: ordinary fade-in animations are passive — the user
+ * scrolls past content that animates "to" them. Scrub-driven scroll-
+ * storytelling makes the user the agent: each pixel of scroll moves the
+ * narrative forward. That's the perceptual delta between "template that
+ * animates" and "site that performs."
+ *
+ * Lenis + ScrollTrigger interaction:
+ *   pinType: "fixed" is mandatory because Lenis uses transform on the
+ *   body for its smooth scroll. The default pinType: "transform" would
+ *   stack a transform on top of Lenis's, causing pin flicker. "fixed"
+ *   anchors the pinned element to the viewport via position: fixed,
+ *   which Lenis's body transform doesn't touch.
  */
 
-/* ── Module-level helpers — pure functions, no component state ───────────── */
-const REVEAL_RADIUS = 300; /* px — looking-glass radius on desktop */
-
-function buildMask(x: number, y: number, r: number): string {
-  /* CSS mask alpha: transparent = overlay invisible (photo shows)
-                    black       = overlay visible (photo hidden)   */
-  return (
-    `radial-gradient(circle at ${x}px ${y}px,` +
-    ` transparent      0px,` +
-    ` transparent      ${r * 0.42}px,` +
-    ` rgba(0,0,0,0.72) ${r * 0.72}px,` +
-    ` black            ${r}px)`
-  );
-}
-
-function applyMask(el: HTMLDivElement, mask: string) {
-  el.style.maskImage                              = mask;
-  (el.style as CSSStyleDeclaration & { webkitMaskImage: string }).webkitMaskImage = mask;
-}
-
-/* ── Local CharText — two variants for asymmetric entrance ───────────────── */
-function CharText({
-  text,
-  charClass = "hero-char",
-}: {
-  text: string;
-  charClass?: string;
-}) {
-  return (
-    <span aria-label={text}>
-      {text.split("").map((c, i) => (
-        <span
-          key={i}
-          aria-hidden="true"
-          className={`${charClass} inline-block`}
-          style={{ whiteSpace: "pre" }}
-        >
-          {c}
-        </span>
-      ))}
-    </span>
-  );
-}
-
-/* ── Component ───────────────────────────────────────────────────────────── */
 export default function HeroSection({ company }: { company: CompanyData }) {
-  const containerRef    = useRef<HTMLElement>(null);
-  const overlayRef      = useRef<HTMLDivElement>(null);
-  const pearlRef        = useRef<HTMLDivElement>(null);
-  const layer2Ref       = useRef<HTMLDivElement>(null);
-  const interactiveRef  = useRef(false); /* true after auto-reveal closes */
+  const sectionRef = useRef<HTMLElement>(null);
+  const pinRef     = useRef<HTMLDivElement>(null);
 
-  /* ── Entrance choreography + auto-reveal ──────────────────────────────── */
   useGSAP(
     () => {
-      /* FOUC reinforcement — CSS already sets these, GSAP confirms them
-         before the first browser paint (useGSAP = useLayoutEffect). */
-      gsap.set(".hero-char",       { y: "115%", opacity: 0 });
-      gsap.set(".hero-char-gold",  { x: 20,     opacity: 0 });
-      gsap.set(".hero-eyebrow",    { opacity: 0, y: 12 });
-      gsap.set(".hero-ref",        { opacity: 0 });
-      gsap.set(".hero-cross",      { opacity: 0, scale: 0.6 });
-      gsap.set(".hero-hairline",   { scaleX: 0 });
-      gsap.set(".hero-sub",        { opacity: 0, y: 12 });
-      gsap.set(".hero-cta",        { opacity: 0, y: 12 });
-      gsap.set(".hero-data-strip", { opacity: 0 });
-      gsap.set(".hero-stats",      { opacity: 0, y: 12 });
-      gsap.set(".hero-scroll",     { opacity: 0 });
-      gsap.set(".hero-meas-path",  { strokeDashoffset: 800 });
-      gsap.set(".hero-meas-tick",  { scaleY: 0 });
-      gsap.set(".hero-meas-label", { opacity: 0 });
-      gsap.set(".hero-flourish",   { strokeDashoffset: 1400, opacity: 0 });
+      gsap.registerPlugin(ScrollTrigger);
 
-      /* Dark overlay — fully opaque at start, mask controls reveal */
-      const overlay = overlayRef.current;
-      const pearl   = pearlRef.current;
-      const section = containerRef.current;
+      const section = sectionRef.current;
+      const pin     = pinRef.current;
+      if (!section || !pin) return;
 
-      if (overlay) {
-        /* r=0 → mask is black everywhere → overlay fully opaque */
-        applyMask(overlay, buildMask(0, 0, 0));
-      }
+      /* ── Pin the inner viewport for the full scroll duration ─────────── */
+      ScrollTrigger.create({
+        trigger:       section,
+        start:         "top top",
+        end:           "bottom bottom",
+        pin:           pin,
+        pinSpacing:    false,
+        pinType:       "fixed",
+        anticipatePin: 1,
+      });
 
-      /* ── Main entrance timeline ─────────────────────────────────────── */
-      const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
-
-      tl
-        /* Frame assembles — draftsman setting up paper before drawing */
-        .to(".hero-cross",   { opacity: 0.55, scale: 1, duration: 0.5, stagger: 0.07 }, 0.2)
-        .to(".hero-ref",     { opacity: 1, duration: 0.5, stagger: 0.07 }, 0.3)
-        .to(".hero-hairline",{ scaleX: 1, duration: 0.9, ease: "expo.out", stagger: 0.08 }, 0.4)
-        /* Eyebrow + the arc that frames the whole composition */
-        .to(".hero-eyebrow", { opacity: 1, y: 0, duration: 0.6 }, 0.8)
-        .to(".hero-flourish",{ strokeDashoffset: 0, opacity: 0.4, duration: 1.8, ease: "power2.inOut" }, 0.8)
-        /* Line 1 — gray chars rise from below */
-        .to(".hero-char",    { y: "0%", opacity: 1, duration: 0.85, stagger: 0.024, ease: "power3.out" }, 1.0)
-        /* Line 2 — gold chars drift in from the right (overlapping with end of line 1) */
-        .to(".hero-char-gold",{ x: 0, opacity: 1, duration: 0.75, stagger: 0.02, ease: "power3.out" }, 1.35)
-        /* Shimmer pulse on "Perfect Smile." as the last gold char lands */
-        .to(".hero-perfect-line", {
-          textShadow: "0 0 120px rgba(201,160,72,0.95), 0 0 240px rgba(201,160,72,0.45)",
-          duration: 0.35,
-          ease: "power2.out",
-        }, 1.35 + 0.02 * 14 + 0.2)
-        .to(".hero-perfect-line", {
-          textShadow: "0 0 80px rgba(201,160,72,0.5), 0 0 160px rgba(201,160,72,0.2)",
-          duration: 0.9,
-          ease: "power2.inOut",
-        }, 1.35 + 0.02 * 14 + 0.2 + 0.35)
-        /* Measurement bar — precision instrument revealing proportion */
-        .to(".hero-meas-path", { strokeDashoffset: 0, duration: 1.3, ease: "power2.inOut" }, 1.9)
-        .to(".hero-meas-tick", { scaleY: 1, duration: 0.4, stagger: 0.12 }, 2.9)
-        .to(".hero-meas-label",{ opacity: 0.7, duration: 0.6 }, 3.1)
-        /* Sub + CTAs land after the title climax */
-        .to(".hero-sub",       { opacity: 1, y: 0, duration: 0.5 }, 2.6)
-        .to(".hero-cta",       { opacity: 1, y: 0, duration: 0.5, stagger: 0.1 }, 2.8)
-        .to(".hero-data-strip",{ opacity: 1, duration: 0.6 }, 3.3)
-        .to(".hero-stats",     { opacity: 1, y: 0, duration: 0.6 }, 3.4)
-        .to(".hero-scroll",    { opacity: 1, duration: 0.7 }, 3.6);
-
-      /* ── Auto-reveal — cinematic portrait introduction ───────────────── */
-      if (!overlay || !section) return;
-
-      /* Center the reveal on the smile (photo is right-anchored ~72%) */
-      const cx = section.offsetWidth  * 0.70;
-      const cy = section.offsetHeight * 0.50;
-
-      const fine = window.matchMedia?.("(pointer: fine)").matches;
-      const sweep = { r: 0 };
-
-      function updateReveal(r: number) {
-        applyMask(overlay!, buildMask(cx, cy, r));
-        if (pearl) {
-          const pr = r * 0.48;
-          pearl.style.background = (
-            `radial-gradient(circle at ${cx}px ${cy}px,` +
-            ` rgba(240,234,224,0.20) 0px,` +
-            ` rgba(201,160,72,0.10)  ${pr * 0.7}px,` +
-            ` rgba(201,160,72,0.22)  ${pr * 0.92}px,` +
-            ` transparent           ${pr}px)`
-          );
-          pearl.style.opacity = String(Math.min(r / REVEAL_RADIUS, 1) * 0.9);
-        }
-      }
-
-      /* Open — face emerges from darkness while title cascades */
-      gsap.to(sweep, {
-        r: REVEAL_RADIUS + 50,
-        duration: 0.8,
-        ease: "power2.out",
-        delay: 1.4,
-        onUpdate: () => updateReveal(sweep.r),
-        onComplete: () => {
-          if (fine) {
-            /* Desktop: close after brief hold → hand control to cursor */
-            gsap.to(sweep, {
-              r: 0,
-              duration: 0.7,
-              ease: "power2.in",
-              delay: 0.5,
-              onUpdate: () => updateReveal(sweep.r),
-              onComplete: () => {
-                if (pearl) gsap.to(pearl, { opacity: 0, duration: 0.4 });
-                interactiveRef.current = true;
-              },
-            });
-          } else {
-            /* Mobile: close once then breathe endlessly — no cursor needed */
-            gsap.to(sweep, {
-              r: 0,
-              duration: 0.7,
-              ease: "power2.in",
-              delay: 0.6,
-              onUpdate: () => updateReveal(sweep.r),
-              onComplete: () => {
-                gsap.to(sweep, {
-                  r: REVEAL_RADIUS * 0.82,
-                  duration: 3.2,
-                  ease: "sine.inOut",
-                  repeat: -1,
-                  yoyo: true,
-                  delay: 1.0,
-                  onUpdate: () => updateReveal(sweep.r),
-                });
-              },
-            });
-          }
+      /* ── Master timeline — scrubbed by scroll progress (0→3.5 timeline units) ──
+       * Numbers are POSITION-IN-TIMELINE, not seconds. Scrub maps 0→end onto
+       * the entire pin distance. So a tween at position [0.5, 1.0] runs while
+       * scroll progress is between 0.5/3.5 ≈ 14% and 1.0/3.5 ≈ 28%.
+       * ──────────────────────────────────────────────────────────────────── */
+      const tl = gsap.timeline({
+        defaults: { ease: "power2.inOut" },
+        scrollTrigger: {
+          trigger: section,
+          start:   "top top",
+          end:     "bottom bottom",
+          scrub:   1,    /* 1s of smoothing — feels weighty, not jerky */
         },
       });
+
+      /* Always-visible UI fades in once at the very start */
+      tl.to([".s1-meta", ".s1-rail"], { opacity: 1, duration: 0.2, stagger: 0.05 }, 0);
+      tl.to(".s1-rail-grow", { scaleY: 1, duration: 3.3, ease: "none" }, 0);
+
+      /* ── BEAT 1 ─────────────────────────────────────────────────────── */
+      /* Line 1 — "We don't whiten teeth." rises in (0–0.25) */
+      tl.fromTo(
+        ".s1-line-a",
+        { opacity: 0, y: 60, filter: "blur(10px)" },
+        { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.5 },
+        0.05
+      );
+      /* Line 1 fades up and out (0.55–0.85) */
+      tl.to(
+        ".s1-line-a",
+        { opacity: 0, y: -60, filter: "blur(8px)", duration: 0.3 },
+        0.55
+      );
+
+      /* Line 2 — "We redesign faces." rises in (0.65–1.0) */
+      tl.fromTo(
+        ".s1-line-b",
+        { opacity: 0, y: 60, filter: "blur(10px)" },
+        { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.4 },
+        0.7
+      );
+      /* Line 2 fades but stays partially visible during reveal (1.3–1.7) */
+      tl.to(
+        ".s1-line-b",
+        { opacity: 0, y: -50, filter: "blur(6px)", duration: 0.4 },
+        1.3
+      );
+
+      /* ── BEAT 2 — The curtain rises ──────────────────────────────────── */
+      /* Veils slide apart from center. (1.0–2.0)
+         Top veil moves up out of viewport, bottom moves down. */
+      tl.to(
+        ".s1-veil-top",
+        { yPercent: -100, duration: 1.0, ease: "power3.inOut" },
+        1.0
+      );
+      tl.to(
+        ".s1-veil-bottom",
+        { yPercent: 100, duration: 1.0, ease: "power3.inOut" },
+        1.0
+      );
+
+      /* Photo subtle scale settles (camera pulling back) — 1.0–2.4 */
+      tl.fromTo(
+        ".s1-photo",
+        { scale: 1.18, filter: "brightness(0.65) contrast(1.18) saturate(0.75)" },
+        { scale: 1.00, filter: "brightness(1.00) contrast(1.10) saturate(0.92)", duration: 1.4, ease: "power2.out" },
+        1.0
+      );
+
+      /* Atmospheric darkening overlay lifts as the reveal progresses */
+      tl.fromTo(
+        ".s1-atmosphere",
+        { opacity: 0.55 },
+        { opacity: 0,    duration: 1.2, ease: "power2.out" },
+        1.4
+      );
+
+      /* ── BEAT 3 — The composition settles ────────────────────────────── */
+      /* Masthead title appears at bottom-left of the photo (2.0–2.6) */
+      tl.fromTo(
+        ".s1-masthead",
+        { opacity: 0, y: 40 },
+        { opacity: 1, y: 0, duration: 0.6, ease: "power3.out" },
+        2.0
+      );
+
+      /* Sub copy fades in (2.4–2.8) */
+      tl.fromTo(
+        ".s1-sub",
+        { opacity: 0, y: 25 },
+        { opacity: 1, y: 0, duration: 0.5 },
+        2.4
+      );
+
+      /* CTAs land last — the call to action is the closing punctuation */
+      tl.fromTo(
+        ".s1-cta",
+        { opacity: 0, y: 25 },
+        { opacity: 1, y: 0, duration: 0.5, stagger: 0.12 },
+        2.7
+      );
+
+      /* Scroll cue at the bottom — appears once we're well into Beat 3 */
+      tl.fromTo(
+        ".s1-cue",
+        { opacity: 0, y: 12 },
+        { opacity: 1, y: 0, duration: 0.4 },
+        3.0
+      );
     },
-    { scope: containerRef }
+    { scope: sectionRef }
   );
 
-  /* ── Cursor-controlled looking-glass (desktop only) ──────────────────── */
-  useEffect(() => {
-    const overlay   = overlayRef.current;
-    const pearl     = pearlRef.current;
-    const container = containerRef.current;
-    const l2        = layer2Ref.current;
-    if (!overlay || !container) return;
-
-    const fine = window.matchMedia?.("(pointer: fine)").matches;
-    if (!fine) return; /* touch devices use the breathing animation */
-
-    /* Capture non-null refs for use inside closures */
-    const containerEl = container;
-
-    /* Lerped state — smooth reveal that feels weighty, not snappy */
-    const target  = { x: 0, y: 0 };
-    const current = { x: 0, y: 0, r: 0 };
-    let inside = false;
-    let animFrame: number;
-
-    function lerp(a: number, b: number, t: number) {
-      return a + (b - a) * t;
-    }
-
-    function tick() {
-      if (inside) {
-        current.x = lerp(current.x, target.x, 0.13);
-        current.y = lerp(current.y, target.y, 0.13);
-        current.r = lerp(current.r, REVEAL_RADIUS, 0.11);
-      } else {
-        current.r = lerp(current.r, 0, 0.09);
-      }
-
-      /* Only take control after the auto-reveal has finished */
-      if (interactiveRef.current) {
-        applyMask(overlay!, buildMask(current.x, current.y, current.r));
-
-        if (pearl) {
-          const pr = current.r * 0.48;
-          const α  = Math.min(current.r / REVEAL_RADIUS, 1);
-          pearl.style.background = (
-            `radial-gradient(circle at ${current.x}px ${current.y}px,` +
-            ` rgba(240,234,224,0.22) 0px,` +
-            ` rgba(201,160,72,0.10)  ${pr * 0.65}px,` +
-            ` rgba(201,160,72,0.24)  ${pr * 0.9}px,` +
-            ` transparent           ${pr}px)`
-          );
-          pearl.style.opacity = String(α * 0.9);
-        }
-      }
-
-      animFrame = requestAnimationFrame(tick);
-    }
-
-    function onMove(e: MouseEvent) {
-      const rect = containerEl.getBoundingClientRect();
-      target.x = e.clientX - rect.left;
-      target.y = e.clientY - rect.top;
-      inside = true;
-
-      /* Subtle content-layer parallax — the page breathes with the cursor */
-      if (l2) {
-        const cx = window.innerWidth  / 2;
-        const cy = window.innerHeight / 2;
-        const dx = (e.clientX - cx) / cx;
-        const dy = (e.clientY - cy) / cy;
-        gsap.to(l2, { x: dx * 9, y: dy * 5, duration: 1.6, ease: "power2.out" });
-      }
-    }
-
-    function onLeave() { inside = false; }
-
-    animFrame = requestAnimationFrame(tick);
-    containerEl.addEventListener("mousemove", onMove);
-    containerEl.addEventListener("mouseleave", onLeave);
-
-    return () => {
-      cancelAnimationFrame(animFrame);
-      containerEl.removeEventListener("mousemove", onMove);
-      containerEl.removeEventListener("mouseleave", onLeave);
-    };
-  }, []);
-
-  /* Atelier reference derived from slug */
-  const ref =
-    company.slug
-      ? company.slug.toUpperCase().slice(0, 8).padEnd(8, "·")
-      : "X.001.AT";
-
   return (
-    <section
-      ref={containerRef}
-      className="relative min-h-screen flex flex-col overflow-hidden"
-      style={{ backgroundColor: "#0C0B09" }}
-    >
-      {/* ── z-1 — Portrait (always at full opacity; overlay controls what's seen) */}
-      <div className="absolute inset-0 z-[1]">
-        <Image
-          src="https://images.unsplash.com/photo-1606811971618-4486d14f3f99?auto=format&fit=crop&w=2000&q=85"
-          alt=""
-          fill
-          sizes="100vw"
-          priority
-          className="object-cover"
-          style={{
-            objectPosition: "72% center",
-            filter:          "brightness(1.06) contrast(1.08) saturate(0.88) sepia(0.05)",
-            /* Subtle breathing — makes the portrait feel alive before cursor interaction */
-            animation:       "hero-photo-breathe 9s ease-in-out infinite",
-          }}
-        />
-        {/* Vertical fades only — top/bottom blend into obsidian.
-            Horizontal darkening is handled by the dark overlay. */}
+    <section ref={sectionRef} className="relative" style={{ height: "350vh" }}>
+      {/* ── Pinned viewport — sticks for the full 350vh scroll duration ─── */}
+      <div
+        ref={pinRef}
+        className="relative w-full h-screen overflow-hidden"
+        style={{ backgroundColor: "#0C0B09" }}
+      >
+        {/* ── z-1 — Portrait (always at full opacity, scale animated) ───── */}
+        <div className="s1-photo absolute inset-0 z-[1] will-change-transform">
+          <Image
+            src="https://images.unsplash.com/photo-1606811971618-4486d14f3f99?auto=format&fit=crop&w=2400&q=90"
+            alt=""
+            fill
+            sizes="100vw"
+            priority
+            className="object-cover"
+            style={{ objectPosition: "65% center" }}
+          />
+        </div>
+
+        {/* ── z-2 — Atmospheric darkening (lifts during Beat 2) ─────────── */}
         <div
-          className="absolute inset-0"
-          style={{
-            background:
-              "linear-gradient(to bottom, #0C0B09 0%, rgba(12,11,9,0.22) 10%," +
-              " transparent 28%, transparent 72%, rgba(12,11,9,0.28) 90%, #0C0B09 100%)",
-          }}
+          className="s1-atmosphere absolute inset-0 z-[2] pointer-events-none"
+          style={{ backgroundColor: "rgba(12,11,9,0.55)" }}
         />
-      </div>
 
-      {/* ── z-2 — Atelier grid (barely visible through the overlay at cursor) */}
-      <div
-        className="absolute inset-0 z-[2] pointer-events-none"
-        style={{
-          backgroundImage:
-            "linear-gradient(rgba(201,160,72,0.025) 1px, transparent 1px)," +
-            "linear-gradient(90deg, rgba(201,160,72,0.025) 1px, transparent 1px)",
-          backgroundSize: "72px 72px",
-        }}
-      />
-
-      {/* ── z-3 — DARK OVERLAY — the core mechanic ─────────────────────────
-       * mask-image controls WHERE this overlay shows. At the cursor position,
-       * the mask is transparent → overlay invisible → portrait emerges.
-       * Everywhere else, mask is black → overlay fully opaque → obsidian.     */}
-      <div
-        ref={overlayRef}
-        className="absolute inset-0 z-[3] pointer-events-none"
-        style={{ backgroundColor: "rgba(12,11,9,0.92)" }}
-      />
-
-      {/* ── z-4 — Atmosphere ────────────────────────────────────────────── */}
-      {/* Pearl+gold glow — illuminates the reveal window from within.
-          The ring gradient creates a "looking-glass rim" at the edge. */}
-      <div
-        ref={pearlRef}
-        className="absolute inset-0 z-[4] pointer-events-none"
-        style={{ opacity: 0, mixBlendMode: "screen" }}
-      />
-      {/* Ambient gold breath — warms the dark surface even outside the reveal */}
-      <div
-        className="absolute bottom-0 left-[12%] w-[900px] h-[700px] rounded-full z-[4] pointer-events-none"
-        style={{
-          background:   "radial-gradient(ellipse at center, rgba(201,160,72,0.13) 0%, rgba(142,110,40,0.04) 38%, transparent 68%)",
-          animation:    "breathe-gold 10s ease-in-out infinite",
-          mixBlendMode: "screen",
-        }}
-      />
-
-      {/* ── z-5 — Frame elements (crosshairs, refs, hairlines) ──────────── */}
-      {/* The frame is ALWAYS visible — it establishes the atelier register
-          even before any content or portrait appears. */}
-      {([
-        { pos: "top-6 left-6 lg:top-10 lg:left-12",          i: 0 },
-        { pos: "top-6 right-6 lg:top-10 lg:right-12",        i: 1 },
-        { pos: "bottom-24 left-6 lg:bottom-28 lg:left-12",   i: 2 },
-        { pos: "bottom-24 right-6 lg:bottom-28 lg:right-12", i: 3 },
-      ] as { pos: string; i: number }[]).map(({ pos, i }) => (
-        <svg
-          key={i}
-          aria-hidden="true"
-          className={`hero-cross absolute ${pos} w-5 h-5 lg:w-6 lg:h-6 z-[5]`}
-          viewBox="0 0 24 24"
-          style={{ transformOrigin: "center", color: "#C9A048" }}
-        >
-          <line x1="0"  y1="12" x2="24" y2="12" stroke="currentColor" strokeWidth="0.7" opacity="0.7" />
-          <line x1="12" y1="0"  x2="12" y2="24" stroke="currentColor" strokeWidth="0.7" opacity="0.7" />
-          <circle cx="12" cy="12" r="2.4" fill="none" stroke="currentColor" strokeWidth="0.5" opacity="0.5" />
-        </svg>
-      ))}
-
-      <div
-        className="hero-ref absolute top-6 left-14 lg:top-10 lg:left-24 font-data text-[9px] tracking-[0.32em] uppercase z-[5]"
-        style={{ color: "rgba(201,160,72,0.55)" }}
-      >
-        01&nbsp;/&nbsp;04
-      </div>
-      <div
-        className="hero-ref absolute top-6 right-14 lg:top-10 lg:right-24 font-data text-[9px] tracking-[0.32em] uppercase z-[5] text-right"
-        style={{ color: "rgba(201,160,72,0.55)" }}
-      >
-        REF&nbsp;·&nbsp;{ref}
-      </div>
-      <div
-        className="hero-ref absolute bottom-24 left-14 lg:bottom-28 lg:left-24 font-data text-[9px] tracking-[0.32em] uppercase z-[5]"
-        style={{ color: "rgba(201,160,72,0.55)" }}
-      >
-        SMILE&nbsp;DESIGN
-      </div>
-      <div
-        className="hero-ref absolute bottom-24 right-14 lg:bottom-28 lg:right-24 font-data text-[9px] tracking-[0.32em] uppercase z-[5] text-right"
-        style={{ color: "rgba(201,160,72,0.55)" }}
-      >
-        VERIFIED&nbsp;◆
-      </div>
-
-      {/* Hairlines — top edges draw inward */}
-      <div
-        className="hero-hairline absolute top-[10%] left-0 w-32 lg:w-52 h-px origin-left z-[5]"
-        style={{ background: "linear-gradient(to right, transparent, rgba(201,160,72,0.5))" }}
-      />
-      <div
-        className="hero-hairline absolute top-[10%] right-0 w-32 lg:w-52 h-px origin-right z-[5]"
-        style={{ background: "linear-gradient(to left, transparent, rgba(201,160,72,0.5))" }}
-      />
-
-      {/* ── z-6 — Flourish arc — "smile geometry" ───────────────────────── */}
-      <svg
-        aria-hidden="true"
-        className="absolute bottom-0 left-0 right-0 w-full pointer-events-none z-[6] hidden md:block"
-        viewBox="0 0 1440 220"
-        preserveAspectRatio="none"
-        style={{ height: "220px" }}
-      >
-        <path
-          className="hero-flourish"
-          d="M -60 180 Q 360 60 720 90 Q 1080 120 1500 40"
-          fill="none"
-          stroke="#C9A048"
-          strokeWidth="0.8"
-          strokeDasharray="1400 1400"
+        {/* ── z-3 — The two curtain slabs ───────────────────────────────── */}
+        {/* Top slab — covers upper 51% (1% overlap to avoid hairline gap) */}
+        <div
+          className="s1-veil-top absolute top-0 left-0 right-0 z-[3] will-change-transform"
+          style={{ height: "51%", backgroundColor: "#0C0B09" }}
         />
-        <path
-          className="hero-flourish"
-          d="M -60 220 Q 360 110 720 140 Q 1080 170 1500 90"
-          fill="none"
-          stroke="#C9A048"
-          strokeWidth="0.4"
-          strokeDasharray="1400 1400"
-          opacity="0.5"
+        {/* Bottom slab — covers lower 51% */}
+        <div
+          className="s1-veil-bottom absolute bottom-0 left-0 right-0 z-[3] will-change-transform"
+          style={{ height: "51%", backgroundColor: "#0C0B09" }}
         />
-      </svg>
 
-      {/* ── z-7 — Vignette (edge framing, independent of overlay) ────────── */}
-      <div
-        className="absolute inset-0 pointer-events-none z-[7]"
-        style={{
-          background:
-            "radial-gradient(ellipse 90% 80% at 50% 48%, transparent 38%, rgba(12,11,9,0.80) 100%)",
-        }}
-      />
+        {/* ── z-4 — Beat 1 poetic lines (visible against black, then fade out) */}
+        <div className="absolute inset-0 z-[4] flex items-center justify-center px-6 pointer-events-none">
+          <div className="relative w-full max-w-5xl text-center">
+            <p
+              className="s1-line-a absolute inset-0 flex items-center justify-center font-display italic"
+              style={{
+                fontSize:      "clamp(2.2rem, 5.5vw, 4.5rem)",
+                lineHeight:    "1.05",
+                letterSpacing: "-0.01em",
+                color:         "#D8D2C8",
+                fontWeight:    400,
+              }}
+            >
+              We don&rsquo;t whiten teeth.
+            </p>
+            <p
+              className="s1-line-b absolute inset-0 flex items-center justify-center font-display italic"
+              style={{
+                fontSize:      "clamp(2.2rem, 5.5vw, 4.5rem)",
+                lineHeight:    "1.05",
+                letterSpacing: "-0.01em",
+                color:         "#C9A048",
+                fontWeight:    400,
+              }}
+            >
+              We redesign faces.
+            </p>
+          </div>
+        </div>
 
-      {/* ── z-20 — Content ────────────────────────────────────────────────── */}
-      <div
-        ref={layer2Ref}
-        className="relative z-[20] flex-1 flex flex-col justify-center max-w-7xl mx-auto w-full px-5 lg:px-12 pt-32 pb-32 will-change-transform"
-      >
-        {/* Eyebrow */}
-        <div className="hero-eyebrow flex items-center gap-3 mb-10 lg:mb-14">
-          <div className="w-6 h-px" style={{ backgroundColor: "#C9A048" }} />
+        {/* ── z-5 — Beat 3 composition (over photo, bottom-left masthead) ── */}
+        <div className="absolute inset-0 z-[5] flex flex-col justify-end px-6 pb-24 lg:px-16 lg:pb-32 pointer-events-none">
+          <div className="max-w-3xl">
+            <h1
+              className="s1-masthead font-display"
+              style={{
+                fontSize:      "clamp(3rem, 9vw, 9rem)",
+                lineHeight:    "0.95",
+                letterSpacing: "-0.02em",
+                color:         "#F0EAE0",
+                fontWeight:    400,
+                textShadow:    "0 2px 40px rgba(0,0,0,0.5)",
+              }}
+            >
+              <span style={{ fontStyle: "italic", color: "#C9A048" }}>L&rsquo;Art</span>{" "}
+              du Sourire.
+            </h1>
+
+            <p
+              className="s1-sub mt-6 max-w-md text-base leading-relaxed"
+              style={{ color: "rgba(240,234,224,0.78)", textShadow: "0 1px 20px rgba(0,0,0,0.6)" }}
+            >
+              Hand-sculpted veneers, designed in-house, signed by the master.
+              No outsourced labs, no rotating clinicians.
+            </p>
+
+            <div className="s1-cta mt-8 flex flex-col sm:flex-row flex-wrap gap-4 pointer-events-auto">
+              <a
+                href="#contact"
+                className="group relative flex items-center gap-3 px-8 py-4 text-xs font-bold tracking-[0.22em] uppercase overflow-hidden transition-all duration-300"
+                style={{ backgroundColor: "#C9A048", color: "#0C0B09" }}
+                onMouseEnter={(e) => {
+                  (e.currentTarget as HTMLElement).style.backgroundColor = "#D9B25C";
+                }}
+                onMouseLeave={(e) => {
+                  (e.currentTarget as HTMLElement).style.backgroundColor = "#C9A048";
+                }}
+              >
+                <span
+                  className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 pointer-events-none"
+                  style={{ background: "linear-gradient(to right, transparent, rgba(255,255,255,0.28), transparent)" }}
+                />
+                <span>Begin Consultation</span>
+                <ArrowRight size={13} className="group-hover:translate-x-1.5 transition-transform duration-200" />
+              </a>
+
+              <a
+                href={`tel:${company.phone}`}
+                className="flex items-center gap-3 px-8 py-4 text-xs font-bold tracking-[0.22em] uppercase transition-all duration-300"
+                style={{
+                  border:          "1px solid rgba(201,160,72,0.35)",
+                  color:           "#F0EAE0",
+                  backgroundColor: "rgba(12,11,9,0.45)",
+                  backdropFilter:  "blur(8px)",
+                }}
+                onMouseEnter={(e) => {
+                  (e.currentTarget as HTMLElement).style.borderColor = "rgba(201,160,72,0.7)";
+                  (e.currentTarget as HTMLElement).style.color       = "#C9A048";
+                }}
+                onMouseLeave={(e) => {
+                  (e.currentTarget as HTMLElement).style.borderColor = "rgba(201,160,72,0.35)";
+                  (e.currentTarget as HTMLElement).style.color       = "#F0EAE0";
+                }}
+              >
+                <Phone size={13} />
+                <span>{company.phone}</span>
+              </a>
+            </div>
+          </div>
+        </div>
+
+        {/* ── z-10 — Persistent UI: chapter indicators, side rail, scroll cue ── */}
+
+        {/* Top-left chapter indicator with pulsing dot */}
+        <div className="s1-meta absolute top-6 left-6 lg:top-10 lg:left-12 z-[10] flex items-center gap-3">
           <span
-            className="font-data text-[11px] tracking-[0.32em] uppercase"
-            style={{ color: "rgba(201,160,72,0.7)" }}
+            className="inline-block w-1.5 h-1.5 rounded-full"
+            style={{
+              backgroundColor: "#C9A048",
+              animation:       "caret-pulse 1.8s ease-in-out infinite",
+            }}
+          />
+          <span
+            className="font-data text-[10px] tracking-[0.45em] uppercase"
+            style={{ color: "rgba(240,234,224,0.7)" }}
           >
-            {company.zone}&nbsp;·&nbsp;Atelier of Cosmetic Dentistry
+            I &mdash; The Opening
           </span>
         </div>
 
-        {/* Title block */}
-        <div className="mb-10 lg:mb-14 relative">
-
-          {/* Line 1 — "The Art of the" — gray, chars rise from below */}
-          <h1
-            className="font-heading font-black mb-0"
-            style={{
-              fontSize:      "clamp(3.4rem, 11vw, 11rem)",
-              lineHeight:    "0.88",
-              letterSpacing: "-0.02em",
-              color:         "#D8D2C8",
-            }}
+        {/* Top-right cabinet name */}
+        <div className="s1-meta absolute top-6 right-6 lg:top-10 lg:right-16 z-[10] text-right">
+          <div
+            className="font-data text-[10px] tracking-[0.45em] uppercase mb-1"
+            style={{ color: "rgba(201,160,72,0.7)" }}
           >
-            <span
-              className="block overflow-hidden"
-              style={{ paddingTop: "0.05em", paddingBottom: "0.05em" }}
-            >
-              <CharText text="The Art" />
-              <span
-                className="font-light italic"
-                style={{ color: "rgba(216,210,200,0.40)", marginLeft: "0.25em" }}
-              >
-                <CharText text="of the" />
-              </span>
-            </span>
-          </h1>
-
-          {/* Line 2 — "Perfect Smile." — gold italic, chars drift in from right.
-              No overflow-hidden here: the horizontal drift doesn't need clipping. */}
-          <h1
-            className="hero-perfect-line font-heading font-black italic"
-            style={{
-              fontSize:      "clamp(3.4rem, 11vw, 11rem)",
-              lineHeight:    "0.88",
-              letterSpacing: "-0.02em",
-              color:         "#C9A048",
-              textShadow:    "0 0 80px rgba(201,160,72,0.5), 0 0 160px rgba(201,160,72,0.2)",
-              paddingTop:    "0.05em",
-              paddingBottom: "0.12em",
-              display:       "block",
-            }}
+            {company.name}
+          </div>
+          <div
+            className="font-data text-[9px] tracking-[0.32em] uppercase"
+            style={{ color: "rgba(216,210,200,0.4)" }}
           >
-            <CharText text="Perfect Smile." charClass="hero-char-gold" />
-          </h1>
-
-          {/* Measurement bar — golden ratio annotation below the title */}
-          <svg
-            aria-hidden="true"
-            className="absolute -bottom-4 lg:-bottom-6 left-0 w-full max-w-[820px] h-6 pointer-events-none hidden lg:block"
-            viewBox="0 0 820 24"
-            preserveAspectRatio="none"
-          >
-            <line
-              className="hero-meas-path"
-              x1="0" y1="12" x2="820" y2="12"
-              stroke="#C9A048" strokeWidth="0.6"
-              strokeDasharray="820 820"
-            />
-            <line
-              className="hero-meas-tick"
-              x1="0" y1="5" x2="0" y2="19"
-              stroke="#C9A048" strokeWidth="0.7"
-              style={{ transformOrigin: "0px 12px" }}
-            />
-            <line
-              className="hero-meas-tick"
-              x1="820" y1="5" x2="820" y2="19"
-              stroke="#C9A048" strokeWidth="0.7"
-              style={{ transformOrigin: "820px 12px" }}
-            />
-            <text
-              className="hero-meas-label"
-              x="410" y="9"
-              fill="#C9A048"
-              fontSize="9"
-              fontFamily="var(--font-jetbrains), monospace"
-              letterSpacing="3"
-              textAnchor="middle"
-            >
-              φ · 1.618 · GOLDEN PROPORTION
-            </text>
-          </svg>
+            {company.zone}
+          </div>
         </div>
 
-        {/* Subheading */}
-        <p
-          className="hero-sub max-w-md text-base leading-relaxed mb-12"
-          style={{ color: "rgba(216,210,200,0.5)" }}
-        >
-          From porcelain veneers to complete smile design — every piece is
-          drawn, sculpted, and signed in-house, with the precision of a
-          single master craftsman.
-        </p>
-
-        {/* CTAs */}
-        <div className="flex flex-col sm:flex-row flex-wrap gap-4 mb-16 lg:mb-20">
-          <a
-            href="#contact"
-            className="hero-cta group relative flex items-center gap-3 px-8 py-4 text-xs font-bold tracking-[0.22em] uppercase overflow-hidden transition-all duration-300"
-            style={{ backgroundColor: "#C9A048", color: "#0C0B09" }}
-            onMouseEnter={(e) => {
-              (e.currentTarget as HTMLElement).style.backgroundColor = "#D9B25C";
-            }}
-            onMouseLeave={(e) => {
-              (e.currentTarget as HTMLElement).style.backgroundColor = "#C9A048";
-            }}
+        {/* Right-side scroll progress rail */}
+        <div className="s1-rail absolute right-6 lg:right-10 top-32 bottom-32 z-[10] flex flex-col items-center gap-3">
+          <span
+            className="font-data text-[8px] tracking-[0.4em] uppercase"
+            style={{ color: "rgba(201,160,72,0.55)" }}
           >
-            {/* Shimmer sweep on hover */}
-            <span
-              className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 pointer-events-none"
+            01
+          </span>
+          <div
+            className="flex-1 w-px relative"
+            style={{ backgroundColor: "rgba(201,160,72,0.12)" }}
+          >
+            <div
+              className="s1-rail-grow absolute top-0 left-0 w-px h-full"
+              style={{ backgroundColor: "#C9A048" }}
+            />
+          </div>
+          <span
+            className="font-data text-[8px] tracking-[0.4em] uppercase"
+            style={{ color: "rgba(201,160,72,0.25)" }}
+          >
+            05
+          </span>
+        </div>
+
+        {/* Bottom scroll cue — only visible deep into Beat 3 */}
+        <div className="s1-cue absolute bottom-6 left-1/2 -translate-x-1/2 z-[10] flex flex-col items-center gap-2.5 pointer-events-none">
+          <span
+            className="font-data text-[9px] tracking-[0.45em] uppercase"
+            style={{ color: "rgba(201,160,72,0.5)" }}
+          >
+            Continue
+          </span>
+          <div style={{ position: "relative", width: "1px", height: "44px", overflow: "hidden" }}>
+            <div
               style={{
-                background: "linear-gradient(to right, transparent, rgba(255,255,255,0.28), transparent)",
+                position:   "absolute",
+                top: 0, left: 0,
+                width:      "1px",
+                height:     "100%",
+                background: "linear-gradient(to bottom, #C9A048, rgba(201,160,72,0.1))",
+                animation:  "hero-scroll-beam 2.4s ease-in-out infinite",
               }}
             />
-            <span>Begin Consultation</span>
-            <ArrowRight size={13} className="group-hover:translate-x-1.5 transition-transform duration-200" />
-          </a>
-
-          <a
-            href={`tel:${company.phone}`}
-            className="hero-cta group flex items-center gap-3 px-8 py-4 text-xs font-bold tracking-[0.22em] uppercase transition-all duration-300"
-            style={{ border: "1px solid rgba(201,160,72,0.3)", color: "rgba(201,160,72,0.75)" }}
-            onMouseEnter={(e) => {
-              (e.currentTarget as HTMLElement).style.borderColor = "rgba(201,160,72,0.7)";
-              (e.currentTarget as HTMLElement).style.color       = "#C9A048";
-            }}
-            onMouseLeave={(e) => {
-              (e.currentTarget as HTMLElement).style.borderColor = "rgba(201,160,72,0.3)";
-              (e.currentTarget as HTMLElement).style.color       = "rgba(201,160,72,0.75)";
-            }}
-          >
-            <Phone size={13} />
-            <span>{company.phone}</span>
-          </a>
-        </div>
-
-        {/* Signature strip */}
-        <div
-          className="hero-data-strip flex items-center gap-3 mb-3 font-data text-[10px] tracking-[0.32em] uppercase"
-          style={{ color: "rgba(201,160,72,0.5)" }}
-        >
-          <span>◆</span>
-          <span>Reference Document · Drawn by Hand · {company.name}</span>
-          <span className="hidden sm:inline">◆</span>
-        </div>
-
-        {/* Stat bar */}
-        <div
-          className="hero-stats flex flex-wrap gap-x-10 gap-y-3 pt-6"
-          style={{ borderTop: "1px solid rgba(201,160,72,0.12)" }}
-        >
-          {STATS.map(({ value, suffix, label }) => (
-            <div key={label} className="flex items-baseline gap-2">
-              <span className="font-data text-sm font-medium" style={{ color: "#C9A048" }}>
-                {value}{suffix}
-              </span>
-              <span
-                className="font-data text-[11px] tracking-wider uppercase"
-                style={{ color: "rgba(216,210,200,0.32)" }}
-              >
-                {label}
-              </span>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* ── Scroll indicator — scanning beam ─────────────────────────────── */}
-      <div className="hero-scroll absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2.5 z-[20]">
-        <span
-          className="font-data text-[9px] tracking-[0.42em] uppercase"
-          style={{ color: "rgba(201,160,72,0.38)" }}
-        >
-          Scroll
-        </span>
-        {/* Animated scanning beam — draws top→down, holds, erases top→down */}
-        <div style={{ position: "relative", width: "1px", height: "54px", overflow: "hidden" }}>
-          <div
-            style={{
-              position:   "absolute",
-              top: 0, left: 0,
-              width:      "1px",
-              height:     "100%",
-              background: "linear-gradient(to bottom, #C9A048, rgba(201,160,72,0.08))",
-              animation:  "hero-scroll-beam 2.4s ease-in-out infinite",
-            }}
-          />
+          </div>
         </div>
       </div>
     </section>

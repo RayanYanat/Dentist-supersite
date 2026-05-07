@@ -4,10 +4,10 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  /* Typography */
+  /* Typography — semantic names, font choice swappable in layout.tsx */
   --font-sans:    var(--font-inter);
   --font-mono:    var(--font-jetbrains);
-  --font-heading: var(--font-playfair);
+  --font-heading: var(--font-display);
 
   /* Atelier Brand Palette */
   --color-background:       var(--background);
@@ -28,35 +28,32 @@
 
 :root {
   /* ── Atelier Palette — Dual Register ──────────────────────────────
-   * The DA is no longer a single dark register. Sections alternate:
-   *   Hero / Gallery / Contact  → DARK   (drama, intimacy, gravity)
-   *   Craft / Signature         → LIGHT  (warmth, trust, accessibility)
-   * Gold is the bridge — it belongs to both registers with equal weight.
+   * Hero / Gallery / Contact  → DARK   (drama, intimacy, gravity)
+   * Craft / Signature         → LIGHT  (warmth, trust, accessibility)
    * ──────────────────────────────────────────────────────────────── */
 
-  /* Dark register (hero / gallery / contact) */
-  --background:        #0C0B09;   /* obsidien chaud — root html bg */
-  --foreground:        #D8D2C8;   /* beige cassé */
+  /* Dark register */
+  --background:        #0C0B09;
+  --foreground:        #D8D2C8;
   --surface:           #141210;
   --surface-elevated:  #1C1A16;
 
-  /* Light register (craft / signature) */
-  --bg-light:          #F7F4EE;   /* ivoire chaud — la couleur de la dent parfaite */
-  --bg-light-elevated: #FFFFFF;   /* white card, premium paper */
-  --bg-light-soft:     #EFE9DD;   /* subtle warm panel */
-  --fg-light:          #1A1612;   /* noir chaud — jamais noir pur, lit comme encre */
-  --fg-light-muted:    #6B6358;   /* terre chaude */
+  /* Light register */
+  --bg-light:          #F7F4EE;
+  --bg-light-elevated: #FFFFFF;
+  --bg-light-soft:     #EFE9DD;
+  --fg-light:          #1A1612;
+  --fg-light-muted:    #6B6358;
   --fg-light-soft:     rgba(26, 22, 18, 0.55);
 
   /* Bridge — gold sits identically on both registers */
   --gold:              #C9A048;
   --gold-dim:          #8E6E28;
-  --gold-warm:         #D9B25C;   /* hover state, slightly brighter */
+  --gold-warm:         #D9B25C;
   --pearl:             #F0EAE0;
 
-  /* Borders — different opacity per register so gold reads correctly */
-  --border-subtle:     rgba(201, 160, 72, 0.12);  /* dark register */
-  --border-light:      rgba(201, 160, 72, 0.22);  /* light register, gold pops more */
+  --border-subtle:     rgba(201, 160, 72, 0.12);
+  --border-light:      rgba(201, 160, 72, 0.22);
   --text-muted:        #6B6358;
 
   /* shadcn compat */
@@ -76,7 +73,7 @@
   --border:            rgba(201, 160, 72, 0.12);
   --input:             rgba(201, 160, 72, 0.08);
   --ring:              #C9A048;
-  --radius:            0.25rem;   /* coins plus serrés — luxe sobre */
+  --radius:            0.25rem;
 }
 
 @layer base {
@@ -86,13 +83,14 @@
 
   html {
     background-color: #0C0B09;
-    scroll-behavior: smooth;
-    scroll-padding-top: 4.5rem;   /* mobile — navbar shrunk */
+    /* scroll-behavior: smooth removed — Lenis owns scroll smoothing now,
+       and CSS smooth-scroll fights pinned ScrollTriggers. */
+    scroll-padding-top: 4.5rem;
   }
 
   @media (min-width: 1024px) {
     html {
-      scroll-padding-top: 5rem;   /* desktop */
+      scroll-padding-top: 5rem;
     }
   }
 
@@ -105,60 +103,56 @@
   }
 
   /*
-   * Playfair Display pour les headings — uppercase + letter-spacing serré
-   * = monumentalité éditoriale. Contraste fort avec le monospace des data.
+   * Cormorant Garamond pour les headings — éditorial français, pas template luxe.
+   * NB : on enlève le text-transform:uppercase global, qui forçait toutes les
+   * h1-h6 en majuscules. Cormorant lit mieux en mixed-case avec ses italiques.
+   * Les sections qui veulent uppercase l'appliquent localement.
    */
   h1, h2, h3, h4, h5, h6 {
-    font-family: var(--font-playfair), Georgia, serif;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: -0.01em;
-    line-height: 0.92;
+    font-family: var(--font-display), Georgia, serif;
+    font-weight: 500;
+    letter-spacing: -0.015em;
+    line-height: 1.0;
   }
 
   .font-data {
     font-family: var(--font-jetbrains), monospace;
   }
+
+  .font-display {
+    font-family: var(--font-display), Georgia, serif;
+  }
 }
 
-/* ── FOUC prevention — initial states for animated elements ──────────────────
- * Invisible via CSS dès le SSR HTML. GSAP override au bon moment.
- * Sans ça : flash ~300ms visible sur premier chargement (bundle pas en cache).
- * ────────────────────────────────────────────────────────────────────────── */
-.hero-eyebrow,
-.hero-ref,
-.hero-cross,
-.hero-sub,
-.hero-cta,
-.hero-scroll,
-.hero-stats,
-.hero-data-strip,
-.hero-flourish,
-.hero-meas-label {
+/* ── FOUC prevention ──────────────────────────────────────────────────────
+ * Initial states for animated elements. Invisible via CSS at SSR HTML time.
+ * GSAP overrides at the right moment. Without this: ~300ms flash on first
+ * paint before JS bundle hydrates.
+ * ──────────────────────────────────────────────────────────────────────── */
+
+/* ── Scene 1 — Hero scroll storytelling ────────────────────────────────── */
+/* The portrait & veils are styled inline (not via class FOUC) since they
+   need to be visible on first paint — only TEXT moments need FOUC hiding. */
+.s1-line,
+.s1-final,
+.s1-cta,
+.s1-meta,
+.s1-rail,
+.s1-rail-grow {
   opacity: 0;
 }
-.hero-hairline {
-  transform: scaleX(0);
-}
-.hero-meas-tick {
+.s1-rail-grow {
   transform: scaleY(0);
+  transform-origin: top center;
 }
-/* Line 1 chars — rise from below (parent has overflow:hidden to clip) */
-.hero-char {
-  display: inline-block;
-  transform: translateY(115%);
-  opacity: 0;
-}
-
-/* Line 2 chars — "Perfect Smile." drifts in from the right.
-   No overflow:hidden on parent needed — translateX doesn't need clipping. */
-.hero-char-gold {
-  display: inline-block;
-  transform: translateX(20px);
-  opacity: 0;
+/* Veil slabs — start covering full height. GSAP slides them apart. */
+.s1-veil-top,
+.s1-veil-bottom {
+  /* visible by default — they ARE the curtain at scroll = 0 */
+  transform: translateY(0);
 }
 
-/* LockedScreen — / route */
+/* ── LockedScreen — / route ──────────────────────────────────────────── */
 .ls-bracket,
 .ls-badge,
 .ls-mark,
@@ -170,7 +164,6 @@
   transform: scaleX(0);
   transform-origin: left center;
 }
-/* Titles stay visible but are clipped horizontally — scan-reveal */
 .ls-title-1,
 .ls-title-2 {
   clip-path: inset(0% 100% 0% 0%);
@@ -182,20 +175,24 @@
   50%       { transform: scale(1.08); opacity: 0.7; }
 }
 
-/* Portrait breathing — subtle scale pulse that makes the photo feel alive
-   even before the cursor arrives. Very slow (9s) so it reads as organic. */
+/* Portrait subtle breath — keeps the face alive even at scroll-rest */
 @keyframes hero-photo-breathe {
   0%, 100% { transform: scale(1.0); }
-  50%       { transform: scale(1.04); }
+  50%       { transform: scale(1.025); }
 }
 
-/* Scroll indicator scanning beam — draws down from top, holds, erases from top.
-   Creates the impression of a downward light sweep (scan, not pulse). */
+/* Scroll indicator scanning beam */
 @keyframes hero-scroll-beam {
   0%   { clip-path: inset(0 0 100% 0); opacity: 0.6; }
   30%  { clip-path: inset(0 0   0% 0); opacity: 1;   }
   70%  { clip-path: inset(0 0   0% 0); opacity: 1;   }
   100% { clip-path: inset(100% 0 0 0); opacity: 0.5; }
+}
+
+/* Caret blink — for the "I —" chapter indicator pulsing dot */
+@keyframes caret-pulse {
+  0%, 100% { opacity: 0.3; }
+  50%       { opacity: 1.0; }
 }
 
 @keyframes shimmer {
@@ -224,7 +221,6 @@
   .bg-surface       { background-color: #141210; }
   .bg-surface-elevated { background-color: #1C1A16; }
 
-  /* Gold glow */
   .glow-gold {
     box-shadow: 0 0 30px rgba(201,160,72,0.22),
                 0 0 60px rgba(201,160,72,0.08);
@@ -233,7 +229,6 @@
     text-shadow: 0 0 40px rgba(201,160,72,0.45);
   }
 
-  /* Gold shimmer text — for special elements */
   .text-shimmer-gold {
     background: linear-gradient(
       90deg,
@@ -250,7 +245,6 @@
     animation: shimmer 4s linear infinite;
   }
 
-  /* Section spacing */
   .section-padding {
     padding-top: 6rem;
     padding-bottom: 6rem;

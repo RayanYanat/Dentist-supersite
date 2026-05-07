@@ -1,28 +1,33 @@
 import type { Metadata } from "next";
-import { Playfair_Display, Inter, JetBrains_Mono } from "next/font/google";
+import { Cormorant_Garamond, Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 
 /*
- * Playfair Display — serif éditorial pour les headings.
- * Contrast fort avec le monospace JetBrains → tension art / science.
+ * Cormorant Garamond — refined editorial serif. Replaces Playfair Display,
+ * which had become the web's "generic luxury" default. Cormorant has more
+ * personality at large sizes, draws cleaner italics, and reads as "Parisian
+ * atelier" rather than "wedding invitation template."
  */
-const playfair = Playfair_Display({
-  variable: "--font-playfair",
-  subsets: ["latin"],
-  weight: ["400", "700", "800", "900"],
-  style: ["normal", "italic"],
+const cormorant = Cormorant_Garamond({
+  variable: "--font-display",
+  subsets:  ["latin"],
+  weight:   ["300", "400", "500", "600", "700"],
+  style:    ["normal", "italic"],
+  display:  "swap",
 });
 
 const inter = Inter({
   variable: "--font-inter",
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
+  subsets:  ["latin"],
+  weight:   ["400", "500", "600"],
+  display:  "swap",
 });
 
 const jetbrains = JetBrains_Mono({
   variable: "--font-jetbrains",
-  subsets: ["latin"],
-  weight: ["400", "500"],
+  subsets:  ["latin"],
+  weight:   ["400", "500"],
+  display:  "swap",
 });
 
 /**
@@ -40,10 +45,12 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${playfair.variable} ${inter.variable} ${jetbrains.variable} h-full`}
+      className={`${cormorant.variable} ${inter.variable} ${jetbrains.variable} h-full`}
     >
-      <body className="min-h-full flex flex-col antialiased"
-        style={{ backgroundColor: "#0C0B09", color: "#D8D2C8" }}>
+      <body
+        className="min-h-full flex flex-col antialiased"
+        style={{ backgroundColor: "#0C0B09", color: "#D8D2C8" }}
+      >
         {children}
       </body>
     </html>
