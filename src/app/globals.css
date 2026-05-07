@@ -143,12 +143,18 @@
 .hero-meas-tick {
   transform: scaleY(0);
 }
-/* Title characters — clipped below their parent (overflow:hidden in JSX),
-   GSAP raises them via translateY. opacity:0 prevents the brief flash before
-   the chars are positioned by GSAP on hydration. */
+/* Line 1 chars — rise from below (parent has overflow:hidden to clip) */
 .hero-char {
   display: inline-block;
   transform: translateY(115%);
+  opacity: 0;
+}
+
+/* Line 2 chars — "Perfect Smile." drifts in from the right.
+   No overflow:hidden on parent needed — translateX doesn't need clipping. */
+.hero-char-gold {
+  display: inline-block;
+  transform: translateX(20px);
   opacity: 0;
 }
 
@@ -174,6 +180,22 @@
 @keyframes breathe-gold {
   0%, 100% { transform: scale(1);    opacity: 1; }
   50%       { transform: scale(1.08); opacity: 0.7; }
+}
+
+/* Portrait breathing — subtle scale pulse that makes the photo feel alive
+   even before the cursor arrives. Very slow (9s) so it reads as organic. */
+@keyframes hero-photo-breathe {
+  0%, 100% { transform: scale(1.0); }
+  50%       { transform: scale(1.04); }
+}
+
+/* Scroll indicator scanning beam — draws down from top, holds, erases from top.
+   Creates the impression of a downward light sweep (scan, not pulse). */
+@keyframes hero-scroll-beam {
+  0%   { clip-path: inset(0 0 100% 0); opacity: 0.6; }
+  30%  { clip-path: inset(0 0   0% 0); opacity: 1;   }
+  70%  { clip-path: inset(0 0   0% 0); opacity: 1;   }
+  100% { clip-path: inset(100% 0 0 0); opacity: 0.5; }
 }
 
 @keyframes shimmer {
