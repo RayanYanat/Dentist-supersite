@@ -287,10 +287,14 @@ export default function HeroSection({ company }: { company: CompanyData }) {
           </div>
         </div>
 
-        {/* ── z-10 — Persistent UI: chapter indicators, side rail, scroll cue ── */}
+        {/* ── z-10 — Persistent UI: chapter indicator, side rail, scroll cue ──
+         * The cabinet name is shown by the Navbar — never duplicated here.
+         * Chapter indicator is offset below the navbar (top-24 / lg:top-28)
+         * so it doesn't collide with the navbar logo + nav links above it.
+         */}
 
-        {/* Top-left chapter indicator with pulsing dot */}
-        <div className="s1-meta absolute top-6 left-6 lg:top-10 lg:left-12 z-[10] flex items-center gap-3">
+        {/* Chapter indicator with pulsing dot — below navbar, left side */}
+        <div className="s1-meta absolute top-24 left-6 lg:top-28 lg:left-12 z-[10] flex items-center gap-3">
           <span
             className="inline-block w-1.5 h-1.5 rounded-full"
             style={{
@@ -306,24 +310,8 @@ export default function HeroSection({ company }: { company: CompanyData }) {
           </span>
         </div>
 
-        {/* Top-right cabinet name */}
-        <div className="s1-meta absolute top-6 right-6 lg:top-10 lg:right-16 z-[10] text-right">
-          <div
-            className="font-data text-[10px] tracking-[0.45em] uppercase mb-1"
-            style={{ color: "rgba(201,160,72,0.7)" }}
-          >
-            {company.name}
-          </div>
-          <div
-            className="font-data text-[9px] tracking-[0.32em] uppercase"
-            style={{ color: "rgba(216,210,200,0.4)" }}
-          >
-            {company.zone}
-          </div>
-        </div>
-
-        {/* Right-side scroll progress rail */}
-        <div className="s1-rail absolute right-6 lg:right-10 top-32 bottom-32 z-[10] flex flex-col items-center gap-3">
+        {/* Right-side scroll progress rail — below navbar */}
+        <div className="s1-rail absolute right-6 lg:right-10 top-40 bottom-32 z-[10] flex flex-col items-center gap-3">
           <span
             className="font-data text-[8px] tracking-[0.4em] uppercase"
             style={{ color: "rgba(201,160,72,0.55)" }}

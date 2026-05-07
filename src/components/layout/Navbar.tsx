@@ -22,8 +22,10 @@ import type { CompanyData } from "@/lib/types";
  * perfect sync as the user scrolls.
  */
 
-/* Section IDs whose background is the LIGHT register */
-const LIGHT_SECTIONS = new Set<string>(["#craft", "#signature"]);
+/* Section IDs whose background is the LIGHT register.
+ * Scene II (#craft) is now dark like the rest of the storytelling — only
+ * Signature (the testimonials breath) remains in light register. */
+const LIGHT_SECTIONS = new Set<string>(["#signature"]);
 
 export default function Navbar({ company }: { company: CompanyData }) {
   const [scrolled, setScrolled]           = useState(false);
