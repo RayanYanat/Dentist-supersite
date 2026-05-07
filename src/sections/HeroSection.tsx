@@ -3,196 +3,158 @@ import { useRef } from "react";
 import Image from "next/image";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
-import ScrollTrigger from "gsap/ScrollTrigger";
 import { Phone, ArrowRight } from "lucide-react";
 import type { CompanyData } from "@/lib/types";
 
 /**
  * Hero — Scene I "The Opening"
  *
- * The hero is no longer a "section the user scrolls past." It's a 350vh
- * pinned scroll experience: 100vh of viewport + 250vh of vertical scroll
- * during which the page itself doesn't move — the content does, driven
- * by scroll progress (scrub: 1).
+ * Auto-playing cinematic intro on page load (~5.5 seconds). The visitor
+ * doesn't have to do anything — the page reveals itself like a film
+ * opening sequence. After the intro settles, the hero is "alive" with
+ * subtle ambient effects, and the visitor is invited to scroll.
  *
- * Three beats:
+ * Three beats, all played automatically via a single GSAP timeline:
  *
- *   BEAT 1  (0–25 %)  — The whisper
- *     Black canvas. One italic line in the center: "We don't whiten teeth."
- *     Then it fades and is replaced by: "We redesign faces."
+ *   BEAT 1  (0.0–2.0 s)  — The whisper
+ *     Black canvas. "We don't whiten teeth." fades up in italic, holds,
+ *     fades out and is replaced by "We redesign faces." in gold.
  *
- *   BEAT 2  (25–60 %) — The curtain
- *     Two dark slabs (top half + bottom half of the viewport) slide apart —
- *     top slides up off-screen, bottom slides down off-screen. The portrait
- *     between them is revealed from the center outward, like elevator
- *     doors opening on a face. Simultaneously the photo's scale settles
- *     (1.18 → 1.0) and an atmospheric darkening lifts.
+ *   BEAT 2  (2.0–4.0 s)  — The curtain
+ *     Two solid slabs (top half + bottom half of the viewport) slide
+ *     apart from the center — top up, bottom down — like elevator doors
+ *     opening on a face. Photo scale settles (1.18 → 1.0); atmospheric
+ *     darkening lifts.
  *
- *   BEAT 3  (60–100 %) — The composition
- *     The portrait, now fully exposed, becomes the canvas. A masthead title
- *     ("L'Art du Sourire") fades in at bottom-left. Subtitle + CTAs slide
- *     in below. The chapter indicator at top-left has been there the whole
- *     time. A scroll cue invites the user into Scene II.
+ *   BEAT 3  (4.0–5.5 s)  — The composition
+ *     "L'Art du Sourire" masthead appears bottom-left over the now-
+ *     revealed portrait. Subtitle + CTAs slide in. Scroll cue invites
+ *     the visitor into Scene II.
  *
- * Why pin + scrub: ordinary fade-in animations are passive — the user
- * scrolls past content that animates "to" them. Scrub-driven scroll-
- * storytelling makes the user the agent: each pixel of scroll moves the
- * narrative forward. That's the perceptual delta between "template that
- * animates" and "site that performs."
- *
- * Lenis + ScrollTrigger interaction:
- *   pinType: "fixed" is mandatory because Lenis uses transform on the
- *   body for its smooth scroll. The default pinType: "transform" would
- *   stack a transform on top of Lenis's, causing pin flicker. "fixed"
- *   anchors the pinned element to the viewport via position: fixed,
- *   which Lenis's body transform doesn't touch.
+ * Why auto-play instead of scrub-on-scroll: forcing the user to scroll
+ * to "activate" the page is counter-intuitive — a first-time visitor
+ * expects the hero to be complete on arrival. Scroll-driven storytelling
+ * is reserved for SUBSEQUENT scenes (Scene II horizontal panels, Scene
+ * III before/after scrub) where the user has already been onboarded
+ * and understands they're inside a directed experience.
  */
 
 export default function HeroSection({ company }: { company: CompanyData }) {
   const sectionRef = useRef<HTMLElement>(null);
-  const pinRef     = useRef<HTMLDivElement>(null);
 
   useGSAP(
     () => {
-      gsap.registerPlugin(ScrollTrigger);
-
       const section = sectionRef.current;
-      const pin     = pinRef.current;
-      if (!section || !pin) return;
+      if (!section) return;
 
-      /* ── Pin the inner viewport for the full scroll duration ─────────── */
-      ScrollTrigger.create({
-        trigger:       section,
-        start:         "top top",
-        end:           "bottom bottom",
-        pin:           pin,
-        pinSpacing:    false,
-        pinType:       "fixed",
-        anticipatePin: 1,
-      });
+      /* ── Master timeline — auto-plays on mount, ~5.5s total ────────────
+       * useGSAP runs as useLayoutEffect → fires synchronously after DOM
+       * commit, before first paint. FOUC prevention is handled by the
+       * .s1-* classes in globals.css setting opacity:0 / transforms.
+       * Position values below are SECONDS.
+       * ─────────────────────────────────────────────────────────────── */
+      const tl = gsap.timeline({ defaults: { ease: "power2.inOut" } });
 
-      /* ── Master timeline — scrubbed by scroll progress (0→3.5 timeline units) ──
-       * Numbers are POSITION-IN-TIMELINE, not seconds. Scrub maps 0→end onto
-       * the entire pin distance. So a tween at position [0.5, 1.0] runs while
-       * scroll progress is between 0.5/3.5 ≈ 14% and 1.0/3.5 ≈ 28%.
-       * ──────────────────────────────────────────────────────────────────── */
-      const tl = gsap.timeline({
-        defaults: { ease: "power2.inOut" },
-        scrollTrigger: {
-          trigger: section,
-          start:   "top top",
-          end:     "bottom bottom",
-          scrub:   1,    /* 1s of smoothing — feels weighty, not jerky */
-        },
-      });
+      /* Persistent UI surfaces immediately */
+      tl.to([".s1-meta", ".s1-rail"], { opacity: 1, duration: 0.5, stagger: 0.1 }, 0);
+      /* Side rail fills during the entire intro — completion = "ready" */
+      tl.to(".s1-rail-grow", { scaleY: 1, duration: 5.0, ease: "none" }, 0.3);
 
-      /* Always-visible UI fades in once at the very start */
-      tl.to([".s1-meta", ".s1-rail"], { opacity: 1, duration: 0.2, stagger: 0.05 }, 0);
-      tl.to(".s1-rail-grow", { scaleY: 1, duration: 3.3, ease: "none" }, 0);
-
-      /* ── BEAT 1 ─────────────────────────────────────────────────────── */
-      /* Line 1 — "We don't whiten teeth." rises in (0–0.25) */
+      /* ── BEAT 1 — The whisper ───────────────────────────────────────── */
       tl.fromTo(
         ".s1-line-a",
         { opacity: 0, y: 60, filter: "blur(10px)" },
-        { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.5 },
-        0.05
+        { opacity: 1, y: 0, filter: "blur(0px)", duration: 1.0, ease: "power3.out" },
+        0.3
       );
-      /* Line 1 fades up and out (0.55–0.85) */
       tl.to(
         ".s1-line-a",
-        { opacity: 0, y: -60, filter: "blur(8px)", duration: 0.3 },
-        0.55
+        { opacity: 0, y: -50, filter: "blur(8px)", duration: 0.7, ease: "power2.in" },
+        1.6
       );
 
-      /* Line 2 — "We redesign faces." rises in (0.65–1.0) */
       tl.fromTo(
         ".s1-line-b",
         { opacity: 0, y: 60, filter: "blur(10px)" },
-        { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.4 },
-        0.7
-      );
-      /* Line 2 fades but stays partially visible during reveal (1.3–1.7) */
-      tl.to(
-        ".s1-line-b",
-        { opacity: 0, y: -50, filter: "blur(6px)", duration: 0.4 },
-        1.3
+        { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.9, ease: "power3.out" },
+        1.9
       );
 
-      /* ── BEAT 2 — The curtain rises ──────────────────────────────────── */
-      /* Veils slide apart from center. (1.0–2.0)
-         Top veil moves up out of viewport, bottom moves down. */
+      /* ── BEAT 2 — The curtain rises ─────────────────────────────────── */
+      /* Slabs slide apart, photo emerges from the center outward */
       tl.to(
         ".s1-veil-top",
-        { yPercent: -100, duration: 1.0, ease: "power3.inOut" },
-        1.0
+        { yPercent: -100, duration: 1.6, ease: "expo.inOut" },
+        2.6
       );
       tl.to(
         ".s1-veil-bottom",
-        { yPercent: 100, duration: 1.0, ease: "power3.inOut" },
-        1.0
+        { yPercent: 100, duration: 1.6, ease: "expo.inOut" },
+        2.6
       );
 
-      /* Photo subtle scale settles (camera pulling back) — 1.0–2.4 */
+      /* Photo subtle scale settles — camera pulling back */
       tl.fromTo(
         ".s1-photo",
         { scale: 1.18, filter: "brightness(0.65) contrast(1.18) saturate(0.75)" },
-        { scale: 1.00, filter: "brightness(1.00) contrast(1.10) saturate(0.92)", duration: 1.4, ease: "power2.out" },
-        1.0
+        { scale: 1.00, filter: "brightness(1.00) contrast(1.10) saturate(0.92)", duration: 2.2, ease: "power2.out" },
+        2.6
       );
 
-      /* Atmospheric darkening overlay lifts as the reveal progresses */
+      /* Atmospheric darkening lifts as the reveal progresses */
       tl.fromTo(
         ".s1-atmosphere",
         { opacity: 0.55 },
-        { opacity: 0,    duration: 1.2, ease: "power2.out" },
-        1.4
+        { opacity: 0,    duration: 1.8, ease: "power2.out" },
+        2.8
       );
 
-      /* ── BEAT 3 — The composition settles ────────────────────────────── */
-      /* Masthead title appears at bottom-left of the photo (2.0–2.6) */
+      /* Line 2 fades while the photo emerges underneath */
+      tl.to(
+        ".s1-line-b",
+        { opacity: 0, y: -40, filter: "blur(6px)", duration: 0.8, ease: "power2.in" },
+        3.0
+      );
+
+      /* ── BEAT 3 — The composition settles ───────────────────────────── */
       tl.fromTo(
         ".s1-masthead",
-        { opacity: 0, y: 40 },
-        { opacity: 1, y: 0, duration: 0.6, ease: "power3.out" },
-        2.0
+        { opacity: 0, y: 50 },
+        { opacity: 1, y: 0, duration: 1.0, ease: "power3.out" },
+        4.1
       );
 
-      /* Sub copy fades in (2.4–2.8) */
       tl.fromTo(
         ".s1-sub",
         { opacity: 0, y: 25 },
-        { opacity: 1, y: 0, duration: 0.5 },
-        2.4
+        { opacity: 1, y: 0, duration: 0.7, ease: "power2.out" },
+        4.5
       );
 
-      /* CTAs land last — the call to action is the closing punctuation */
       tl.fromTo(
         ".s1-cta",
         { opacity: 0, y: 25 },
-        { opacity: 1, y: 0, duration: 0.5, stagger: 0.12 },
-        2.7
+        { opacity: 1, y: 0, duration: 0.6, stagger: 0.12, ease: "power2.out" },
+        4.8
       );
 
-      /* Scroll cue at the bottom — appears once we're well into Beat 3 */
       tl.fromTo(
         ".s1-cue",
         { opacity: 0, y: 12 },
-        { opacity: 1, y: 0, duration: 0.4 },
-        3.0
+        { opacity: 1, y: 0, duration: 0.5 },
+        5.1
       );
     },
     { scope: sectionRef }
   );
 
   return (
-    <section ref={sectionRef} className="relative" style={{ height: "350vh" }}>
-      {/* ── Pinned viewport — sticks for the full 350vh scroll duration ─── */}
-      <div
-        ref={pinRef}
-        className="relative w-full h-screen overflow-hidden"
-        style={{ backgroundColor: "#0C0B09" }}
-      >
+    <section
+      ref={sectionRef}
+      className="relative w-full h-screen overflow-hidden"
+      style={{ backgroundColor: "#0C0B09" }}
+    >
+      <div className="relative w-full h-full">
         {/* ── z-1 — Portrait (always at full opacity, scale animated) ───── */}
         <div className="s1-photo absolute inset-0 z-[1] will-change-transform">
           <Image
