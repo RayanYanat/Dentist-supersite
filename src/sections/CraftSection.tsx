@@ -108,25 +108,40 @@ export default function CraftSection({ company }: { company: CompanyData }) {
       const track   = trackRef.current;
       if (!section || !track) return;
 
-      /* ── Horizontal sweep — pinned + scrubbed ────────────────────────
-       * Distance: (n-1) × viewport width — so 5 transitions for 6 panels.
-       * The track translates from x:0 to x:-(n-1)·vw as the user scrolls
-       * vertically through the same distance.
-       * ────────────────────────────────────────────────────────────── */
-      const getDistance = () => (SERVICES.length - 1) * window.innerWidth;
+      /* ── Horizontal sweep — pinned + scrubbed + snapped ────────────────
+       * UX-tuned for comfort:
+       *   - Horizontal track distance: (n-1) × innerWidth — fixed, this
+       *     is how far panels actually need to travel.
+       *   - Vertical SCROLL distance: only 60vh per transition → 300vh
+       *     total for 6 panels. Aggressive ratio (each scroll tick
+       *     advances panels ~2.6× faster than 1:1) so the section
+       *     doesn't feel like a long slog.
+       *   - Snap: the scroll position eases into each panel's anchor
+       *     once the user stops scrolling. Each panel feels like a
+       *     page turn — clean, intentional, never "stranded between
+       *     panels."
+       * ───────────────────────────────────────────────────────────── */
+      const trackDistance  = () => (SERVICES.length - 1) * window.innerWidth;
+      const scrollDistance = () => (SERVICES.length - 1) * window.innerHeight * 0.6;
 
       const sweep = gsap.to(track, {
-        x: () => -getDistance(),
+        x: () => -trackDistance(),
         ease: "none",
         scrollTrigger: {
           trigger:             section,
           start:               "top top",
-          end:                 () => `+=${getDistance()}`,
+          end:                 () => `+=${scrollDistance()}`,
           pin:                 true,
           pinType:             "fixed",
           anticipatePin:       1,
           scrub:               1,
           invalidateOnRefresh: true,
+          snap: {
+            snapTo:    1 / (SERVICES.length - 1),
+            duration:  { min: 0.25, max: 0.55 },
+            delay:     0.05,
+            ease:      "power2.inOut",
+          },
         },
       });
 
@@ -192,11 +207,12 @@ export default function CraftSection({ company }: { company: CompanyData }) {
         }
       });
 
-      /* Progress dots — fill the active dot based on sweep progress */
+      /* Progress dots — fill the active dot based on sweep progress.
+         Same scroll range as the sweep (so they stay in sync). */
       ScrollTrigger.create({
         trigger:             section,
         start:               "top top",
-        end:                 () => `+=${getDistance()}`,
+        end:                 () => `+=${scrollDistance()}`,
         scrub:               true,
         invalidateOnRefresh: true,
         onUpdate: (self) => {
