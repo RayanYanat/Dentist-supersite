@@ -45,6 +45,7 @@ export default function ContactSection({ company }: { company: CompanyData }) {
     () => {
       gsap.registerPlugin(ScrollTrigger);
 
+      gsap.set(".contact-meta",    { opacity: 0, x: -10 });
       gsap.set(".contact-eyebrow", { opacity: 0, y: 20 });
       gsap.set(".contact-lede",    { opacity: 0, y: 20 });
       gsap.set(".char-reveal",     { y: "115%", opacity: 0 });
@@ -57,11 +58,12 @@ export default function ContactSection({ company }: { company: CompanyData }) {
         once:    true,
         onEnter: () => {
           const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
-          tl.to(".contact-eyebrow", { opacity: 1, y: 0, duration: 0.6 }, 0)
-            .to(".char-reveal",     { y: "0%", opacity: 1, duration: 0.85, stagger: 0.022 }, 0.15)
-            .to(".contact-lede",    { opacity: 1, y: 0, duration: 0.7 }, 0.7)
-            .to(".contact-form",    { opacity: 1, y: 0, duration: 0.9 }, 0.5)
-            .to(".contact-rail",    { opacity: 1, y: 0, duration: 0.9 }, 0.65);
+          tl.to(".contact-meta",    { opacity: 1, x: 0, duration: 0.6 }, 0)
+            .to(".contact-eyebrow", { opacity: 1, y: 0, duration: 0.6 }, 0.1)
+            .to(".char-reveal",     { y: "0%", opacity: 1, duration: 0.85, stagger: 0.022 }, 0.25)
+            .to(".contact-lede",    { opacity: 1, y: 0, duration: 0.7 }, 0.8)
+            .to(".contact-form",    { opacity: 1, y: 0, duration: 0.9 }, 0.6)
+            .to(".contact-rail",    { opacity: 1, y: 0, duration: 0.9 }, 0.75);
         },
       });
     },
@@ -106,6 +108,21 @@ export default function ContactSection({ company }: { company: CompanyData }) {
       />
 
       <div className="relative max-w-7xl mx-auto px-5 lg:px-8">
+
+        {/* Scene V chapter indicator — inline above the header.
+            Closes the storytelling arc opened by Scene I. */}
+        <div className="contact-meta flex items-center gap-3 mb-10 lg:mb-14">
+          <span
+            className="inline-block w-1.5 h-1.5 rounded-full"
+            style={{ backgroundColor: "#C9A048", animation: "caret-pulse 1.8s ease-in-out infinite" }}
+          />
+          <span
+            className="font-data text-[10px] tracking-[0.45em] uppercase"
+            style={{ color: "rgba(240,234,224,0.6)" }}
+          >
+            V &mdash; The Invitation
+          </span>
+        </div>
 
         {/* ── Header ────────────────────────────────────────────── */}
         <div className="mb-16 lg:mb-20 max-w-3xl">
