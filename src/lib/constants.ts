@@ -5,10 +5,10 @@
  */
 
 export const NAV_LINKS = [
-  { label: "Our Craft",       href: "#craft"           },
-  { label: "Transformations", href: "#transformations" },
-  { label: "Our Signature",   href: "#signature"       },
-  { label: "Contact",         href: "#contact"         },
+  { label: "The Crafts",      href: "#craft"   },
+  { label: "The Ledger",      href: "#ledger"  },
+  { label: "The Maker",       href: "#maker"   },
+  { label: "Contact",         href: "#contact" },
 ];
 
 /**

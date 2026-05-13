@@ -155,16 +155,21 @@ export default function HeroSection({ company }: { company: CompanyData }) {
       style={{ backgroundColor: "#0C0B09" }}
     >
       <div className="relative w-full h-full">
-        {/* ── z-1 — Portrait (always at full opacity, scale animated) ───── */}
+        {/* ── z-1 — Portrait (always at full opacity, scale animated) ─────
+         * Editorial portrait with a visible smile — the curtain reveals a
+         * FACE, and a SMILE is what a cosmetic atelier transforms. Stock
+         * dental closeups (teeth, x-rays, tools) read as "clinic" and
+         * undermine the atelier register; the smile here is the category
+         * cue without sacrificing the editorial frame. */}
         <div className="s1-photo absolute inset-0 z-[1] will-change-transform">
           <Image
-            src="https://images.unsplash.com/photo-1606811971618-4486d14f3f99?auto=format&fit=crop&w=2400&q=90"
+            src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=2400&q=90"
             alt=""
             fill
             sizes="100vw"
             priority
             className="object-cover"
-            style={{ objectPosition: "65% center" }}
+            style={{ objectPosition: "center 28%" }}
           />
         </div>
 

@@ -4,6 +4,7 @@ import { getSupabase }    from "@/lib/supabase";
 import type { CompanyData } from "@/lib/types";
 
 import AmbientCanvas from "@/components/shared/AmbientCanvas";
+import BookingBar    from "@/components/shared/BookingBar";
 import CustomCursor  from "@/components/shared/CustomCursor";
 import GlobalTexture from "@/components/shared/GlobalTexture";
 import GSAPConfig    from "@/components/shared/GSAPConfig";
@@ -14,7 +15,7 @@ import Footer        from "@/components/layout/Footer";
 import HeroSection      from "@/sections/HeroSection";
 import CraftSection     from "@/sections/CraftSection";
 import GallerySection   from "@/sections/GallerySection";
-import SignatureSection from "@/sections/SignatureSection";
+import MakerSection     from "@/sections/SignatureSection"; /* file name kept; chapter is "The Maker" */
 import ContactSection   from "@/sections/ContactSection";
 
 /* ── ISR config ────────────────────────────────────────────────────────────
@@ -42,7 +43,7 @@ export async function generateStaticParams() {
 async function getCompany(slug: string): Promise<CompanyData | null> {
   const { data, error } = await getSupabase()
     .from("leads")
-    .select("slug, name, city, phone, email, license, address")
+    .select("slug, name, city, phone, email, address, rating, reviews_count, website, instagram, facebook")
     .eq("slug", slug)
     .single();
 
@@ -101,15 +102,19 @@ export default async function SlugPage({
       {/* Navbar outside <main> → root stacking context → iOS safe */}
       <Navbar company={company} />
 
+      {/* Mobile-only sticky booking bar — restores persistent CTA on mobile
+         where the navbar collapses into a hamburger after first scroll. */}
+      <BookingBar company={company} />
+
       <main style={{ position: "relative", zIndex: 1 }}>
         {/* GSAPConfig first child — registers plugins before ScrollTriggers */}
         <GSAPConfig />
 
-        <HeroSection      company={company} />
-        <CraftSection     company={company} />
-        <GallerySection   company={company} />
-        <SignatureSection company={company} />
-        <ContactSection   company={company} />
+        <HeroSection    company={company} />
+        <CraftSection   company={company} />
+        <GallerySection company={company} />
+        <MakerSection   company={company} />
+        <ContactSection company={company} />
 
         <Footer company={company} />
       </main>

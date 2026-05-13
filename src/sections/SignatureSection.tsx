@@ -1,153 +1,108 @@
 "use client";
 import { useRef } from "react";
+import Image from "next/image";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import ScrollTrigger from "gsap/ScrollTrigger";
-import { STATS, CERTIFS } from "@/lib/constants";
-import CharText from "@/components/shared/CharText";
 import type { CompanyData } from "@/lib/types";
 
 /**
- * "Our Signature" — combines what HVAC kept as separate Stats + Trust
- * sections. Three movements, one section:
+ * Scene IV — "The Maker"
  *
- *   1. By the numbers — animated stat counters on scroll
- *   2. By the hand    — recognitions / certifications strip
- *   3. By the voice   — three patient testimonials in atelier voice
+ * Replaces the previous Signature section (testimonial pull-quote +
+ * audit-trail stat + cert acronyms) which was meaningless filler — it
+ * decorated empty space because there was no real person, no real proof,
+ * no real signature behind it.
  *
- * The merge is intentional: in the dental atelier DA, social proof reads
- * as a single impression — "this practice signs its work" — rather than
- * as fragmented brag panels.
+ * The Maker repurposes the slot to introduce the practitioner: portrait
+ * left, brief bio right, hand-drawn signature SVG drawn live as you
+ * read. For a single-doctor cosmetic atelier, the doctor IS the brand —
+ * Patek can be institutional, a dental atelier cannot. Adding the maker
+ * here gives the rest of the site (the "hand-sculpted, signed
+ * personally" claims) a centre of gravity.
  *
- * Counters animate via gsap proxy objects (object.val 0 → target) with
- * an onUpdate that writes Math.round() into the span. ScrollTrigger.once
- * so re-entering the section doesn't restart the count.
+ * Mechanic — the portrait warms up as you scroll into the section.
+ *
+ *   start: section top reaches 80% of viewport height
+ *   end:   section top reaches 30% of viewport height
+ *   scrub: 0.6 (eased follow, not 1:1)
+ *
+ *   Filter scrubs from { brightness 0.5, saturate 0.35, contrast 1.18 }
+ *   to            { brightness 1.0, saturate 0.95, contrast 1.05 }
+ *   Scale scrubs from 1.06 → 1.00.
+ *
+ * The result is that the doctor "comes into being" as the visitor
+ * commits attention to them — a subtle but specific narrative beat that
+ * fits the introduction-of-a-craftsman moment.
+ *
+ * The signature path is drawn after the bio settles. It now signs the
+ * actual person whose face is shown — the gesture earns its weight.
+ *
+ * The file is still SignatureSection.tsx for git-history continuity;
+ * the exported component is renamed accordingly.
  */
 
-const VOICES = [
-  {
-    quote:     "I'd put off cosmetic work for fifteen years. The consultation alone changed my mind — they took an hour with me before mentioning a single procedure.",
-    name:      "Margaret L.",
-    treatment: "Porcelain Veneers · 2024",
-  },
-  {
-    quote:     "What sold me was that they redesigned my entire treatment plan when I asked one question. Most clinics would have stuck to the original sale.",
-    name:      "David R.",
-    treatment: "Implant Restoration · 2024",
-  },
-  {
-    quote:     "The atmosphere is the first surprise. The result is the second.",
-    name:      "Émilie K.",
-    treatment: "Smile Design · 2025",
-  },
-];
-
-export default function SignatureSection({ company }: { company: CompanyData }) {
-  const sectionRef  = useRef<HTMLElement>(null);
-  const counterRefs = useRef<(HTMLSpanElement | null)[]>([]);
+export default function MakerSection({ company }: { company: CompanyData }) {
+  const sectionRef = useRef<HTMLElement>(null);
+  const photoRef   = useRef<HTMLDivElement>(null);
 
   useGSAP(
     () => {
       gsap.registerPlugin(ScrollTrigger);
 
-      gsap.set(".sig-meta",     { opacity: 0, x: -10 });
-      gsap.set(".sig-eyebrow",  { opacity: 0, y: 20 });
-      gsap.set(".sig-lede",     { opacity: 0, y: 20 });
-      gsap.set(".char-reveal",  { y: "115%", opacity: 0 });
-      gsap.set(".sig-stat",     { opacity: 0, y: 30 });
-      gsap.set(".sig-cert-row", { opacity: 0, y: 20 });
-      gsap.set(".sig-voice",    { opacity: 0, y: 40 });
-      gsap.set(".sig-divider",  { scaleX: 0, transformOrigin: "left center" });
-      gsap.set(".sig-sign",     { opacity: 0 });
+      /* ── Photo warm-up — scrubbed filter + scale ──────────────────── */
+      const photo = photoRef.current;
+      if (photo) {
+        gsap.fromTo(
+          photo,
+          {
+            filter: "brightness(0.5) saturate(0.35) contrast(1.18)",
+            scale:  1.06,
+          },
+          {
+            filter: "brightness(1.0) saturate(0.95) contrast(1.05)",
+            scale:  1.0,
+            ease:   "none",
+            scrollTrigger: {
+              trigger: sectionRef.current,
+              start:   "top 85%",
+              end:     "top 25%",
+              scrub:   0.6,
+            },
+          }
+        );
+      }
 
-      /* Header — chapter UI → eyebrow → char cascade → lede */
+      /* ── Header + body reveal ────────────────────────────────────── */
+      gsap.set(".mk-meta",      { opacity: 0, x: -10 });
+      gsap.set(".mk-rule",      { scaleX: 0, transformOrigin: "left center" });
+      gsap.set(".mk-eyebrow",   { opacity: 0, y: 16 });
+      gsap.set(".mk-heading",   { opacity: 0, y: 24 });
+      gsap.set(".mk-bio",       { opacity: 0, y: 22 });
+      gsap.set(".mk-divider",   { scaleX: 0, transformOrigin: "left center" });
+      gsap.set(".mk-path",      { strokeDashoffset: 1 });
+      gsap.set(".mk-flourish",  { strokeDashoffset: 1 });
+      gsap.set(".mk-attrib",    { opacity: 0, y: 14 });
+      gsap.set(".mk-photo-frame", { opacity: 0, y: 30 });
+      gsap.set(".mk-photo-tag", { opacity: 0 });
+
       ScrollTrigger.create({
         trigger: sectionRef.current,
-        start:   "top 82%",
+        start:   "top 78%",
         once:    true,
         onEnter: () => {
           const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
-          tl.to(".sig-meta",    { opacity: 1, x: 0, duration: 0.6 }, 0)
-            .to(".sig-eyebrow", { opacity: 1, y: 0, duration: 0.6 }, 0.1)
-            .to(".char-reveal", { y: "0%", opacity: 1, duration: 0.85, stagger: 0.022 }, 0.25)
-            .to(".sig-lede",    { opacity: 1, y: 0, duration: 0.7 }, 0.8);
-        },
-      });
-
-      /* Stats — counters + reveal */
-      ScrollTrigger.create({
-        trigger: ".sig-stats-row",
-        start:   "top 85%",
-        once:    true,
-        onEnter: () => {
-          gsap.to(".sig-stat", {
-            opacity: 1, y: 0,
-            duration: 0.8, stagger: 0.1, ease: "power3.out",
-          });
-
-          STATS.forEach((stat, i) => {
-            const el = counterRefs.current[i];
-            if (!el) return;
-            const obj = { val: 0 };
-            gsap.to(obj, {
-              val:      stat.value,
-              duration: 1.8,
-              ease:     "power2.out",
-              delay:    0.2 + i * 0.1,
-              onUpdate: () => {
-                /* For "5.0" we want one decimal; for the rest, integer */
-                el.textContent =
-                  stat.suffix === ".0"
-                    ? obj.val.toFixed(1).replace(/\.0$/, "")
-                    : String(Math.round(obj.val));
-              },
-            });
-          });
-        },
-      });
-
-      /* Dividers */
-      gsap.utils.toArray<HTMLElement>(".sig-divider").forEach((el) => {
-        ScrollTrigger.create({
-          trigger: el,
-          start:   "top 88%",
-          once:    true,
-          onEnter: () => {
-            gsap.to(el, { scaleX: 1, duration: 1.1, ease: "expo.out" });
-          },
-        });
-      });
-
-      /* Certifications */
-      ScrollTrigger.create({
-        trigger: ".sig-certs",
-        start:   "top 88%",
-        once:    true,
-        onEnter: () => {
-          gsap.to(".sig-cert-row", { opacity: 1, y: 0, duration: 0.7, ease: "power3.out" });
-        },
-      });
-
-      /* Voices */
-      ScrollTrigger.create({
-        trigger: ".sig-voices",
-        start:   "top 80%",
-        once:    true,
-        onEnter: () => {
-          gsap.to(".sig-voice", {
-            opacity: 1, y: 0,
-            duration: 0.9, stagger: 0.15, ease: "power3.out",
-          });
-        },
-      });
-
-      /* Signature line */
-      ScrollTrigger.create({
-        trigger: ".sig-sign",
-        start:   "top 92%",
-        once:    true,
-        onEnter: () => {
-          gsap.to(".sig-sign", { opacity: 1, duration: 1.0, ease: "power2.out" });
+          tl.to(".mk-meta",        { opacity: 1, x: 0, duration: 0.6 },                  0)
+            .to(".mk-photo-frame", { opacity: 1, y: 0, duration: 1.0 },                  0.05)
+            .to(".mk-rule",        { scaleX: 1, duration: 0.9, ease: "expo.out" },       0.15)
+            .to(".mk-eyebrow",     { opacity: 1, y: 0, duration: 0.6 },                  0.25)
+            .to(".mk-heading",     { opacity: 1, y: 0, duration: 0.95 },                 0.35)
+            .to(".mk-bio",         { opacity: 1, y: 0, duration: 0.9 },                  0.7)
+            .to(".mk-photo-tag",   { opacity: 1, duration: 0.6 },                        0.85)
+            .to(".mk-divider",     { scaleX: 1, duration: 0.9, ease: "expo.out" },       1.1)
+            .to(".mk-path",        { strokeDashoffset: 0, duration: 2.4, ease: "power1.inOut" }, 1.3)
+            .to(".mk-flourish",    { strokeDashoffset: 0, duration: 0.85, ease: "power2.out" },  3.0)
+            .to(".mk-attrib",      { opacity: 1, y: 0, duration: 0.7 },                  3.2);
         },
       });
     },
@@ -157,206 +112,219 @@ export default function SignatureSection({ company }: { company: CompanyData }) 
   return (
     <section
       ref={sectionRef}
-      id="signature"
+      id="maker"
       className="relative section-padding overflow-hidden"
-      style={{ backgroundColor: "#F7F4EE" }}     /* ── LIGHT REGISTER ── */
+      style={{ backgroundColor: "#0C0B09" }}
     >
-      {/* Top hairline — boundary marker between Gallery (dark) and here */}
+      {/* Top hairline */}
       <div
         className="absolute top-0 left-0 right-0 h-px"
-        style={{ background: "linear-gradient(to right, transparent, rgba(201,160,72,0.55), transparent)" }}
+        style={{ background: "linear-gradient(to right, transparent, rgba(201,160,72,0.32), transparent)" }}
       />
 
-      {/* Warm wash — soft cream highlight at top, fades down. On light bg
-          a multiply blend keeps it from looking like a halo. */}
+      {/* Atelier grid texture */}
       <div
-        className="absolute top-0 left-1/2 -translate-x-1/2 w-[1100px] h-[700px] rounded-full pointer-events-none"
+        className="absolute inset-0 z-[1] pointer-events-none"
         style={{
-          background:   "radial-gradient(ellipse at top, rgba(217,178,92,0.13) 0%, transparent 65%)",
-          mixBlendMode: "multiply",
+          backgroundImage:
+            "linear-gradient(rgba(201,160,72,0.022) 1px, transparent 1px)," +
+            "linear-gradient(90deg, rgba(201,160,72,0.022) 1px, transparent 1px)",
+          backgroundSize: "84px 84px",
         }}
       />
 
-      <div className="relative max-w-7xl mx-auto px-5 lg:px-8">
+      {/* Soft warm wash from the photo side */}
+      <div
+        className="absolute -bottom-32 -right-32 w-[700px] h-[700px] rounded-full pointer-events-none"
+        style={{
+          background: "radial-gradient(ellipse at center, rgba(217,178,92,0.08) 0%, transparent 65%)",
+          animation:  "breathe-gold 18s ease-in-out infinite",
+        }}
+      />
 
-        {/* Scene IV chapter indicator — inline above the header.
-            For non-pinned content scenes, an inline chapter label is
-            cleaner than an absolute overlay (no padding collisions). */}
-        <div className="sig-meta flex items-center gap-3 mb-10 lg:mb-14">
+      <div className="relative z-[2] max-w-7xl mx-auto px-5 lg:px-8">
+
+        {/* Chapter indicator */}
+        <div className="mk-meta flex items-center gap-3 mb-12 lg:mb-16">
           <span
             className="inline-block w-1.5 h-1.5 rounded-full"
             style={{ backgroundColor: "#C9A048", animation: "caret-pulse 1.8s ease-in-out infinite" }}
           />
           <span
             className="font-data text-[10px] tracking-[0.45em] uppercase"
-            style={{ color: "rgba(26,22,18,0.6)" }}
+            style={{ color: "rgba(240,234,224,0.7)" }}
           >
-            IV &mdash; The Signature
+            III &mdash; The Maker
           </span>
         </div>
 
-        {/* ── Header ────────────────────────────────────────────── */}
-        <div className="mb-16 lg:mb-24 max-w-3xl">
-          <div className="sig-eyebrow flex items-center gap-3 mb-6">
-            <div className="w-6 h-px" style={{ backgroundColor: "#C9A048" }} />
-            <span className="font-data text-[11px] tracking-[0.3em] uppercase"
-              style={{ color: "#8E6E28" }}>
-              Our Signature
-            </span>
-          </div>
-          <h2 className="font-heading text-[clamp(2.4rem,6vw,5.5rem)] leading-[0.92] font-extrabold mb-6"
-            style={{ color: "#1A1612" }}>
-            <span className="block overflow-hidden" style={{ paddingTop: "0.05em", paddingBottom: "0.08em" }}>
-              <CharText text="By the numbers," />
-            </span>
-            <span className="block overflow-hidden italic" style={{ color: "#C9A048", paddingTop: "0.05em", paddingBottom: "0.12em" }}>
-              <CharText text="by the hand." />
-            </span>
-          </h2>
-          <p className="sig-lede text-base leading-relaxed max-w-xl"
-            style={{ color: "rgba(26,22,18,0.6)" }}>
-            Every result is recorded, reviewed, and signed.
-            What follows is not advertising — it is the audit trail.
-          </p>
-        </div>
+        {/* ── Two-column spread ──────────────────────────────────── */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16 items-start">
 
-        {/* ── Stats band ────────────────────────────────────────── */}
-        <div className="sig-stats-row grid grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-6 mb-16 lg:mb-20">
-          {STATS.map((stat, i) => (
-            <div key={stat.label} className="sig-stat flex flex-col">
-              <div className="flex items-baseline gap-1 mb-3">
-                <span
-                  ref={(el) => { counterRefs.current[i] = el; }}
-                  className="font-heading font-extrabold tracking-tight italic"
-                  style={{
-                    fontSize:   "clamp(3.5rem, 7vw, 5.5rem)",
-                    lineHeight: 1,
-                    color:      "#C9A048",
-                  }}
-                >
-                  0
-                </span>
-                <span className="font-heading font-extrabold italic"
-                  style={{
-                    fontSize:   "clamp(2rem, 4vw, 3rem)",
-                    lineHeight: 1,
-                    color:      "#C9A048",
-                  }}>
-                  {stat.suffix}
-                </span>
+          {/* LEFT — Portrait (warms up via scrub) */}
+          <div className="mk-photo-frame lg:col-span-5 relative">
+            <div
+              className="relative w-full overflow-hidden"
+              style={{ aspectRatio: "4 / 5" }}
+            >
+              <div
+                ref={photoRef}
+                className="absolute inset-0 will-change-transform"
+                style={{
+                  filter: "brightness(0.5) saturate(0.35) contrast(1.18)",
+                  transform: "scale(1.06)",
+                }}
+              >
+                <Image
+                  src="https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&w=1600&q=90"
+                  alt=""
+                  fill
+                  sizes="(min-width: 1024px) 40vw, 100vw"
+                  className="object-cover"
+                  style={{ objectPosition: "center 15%" }}
+                />
               </div>
-              <span className="font-data text-[10px] tracking-[0.3em] uppercase"
-                style={{ color: "rgba(26,22,18,0.5)" }}>
-                {stat.label}
+
+              {/* Bottom-fade to bed the photo into the section ground */}
+              <div
+                className="absolute inset-x-0 bottom-0 h-1/3 pointer-events-none"
+                style={{
+                  background: "linear-gradient(to bottom, transparent 0%, rgba(12,11,9,0.55) 100%)",
+                }}
+              />
+
+              {/* Corner brackets — atelier framing */}
+              <div className="absolute top-3 left-3 w-6 h-6 pointer-events-none"
+                style={{ borderTop: "1px solid rgba(201,160,72,0.55)", borderLeft: "1px solid rgba(201,160,72,0.55)" }} />
+              <div className="absolute top-3 right-3 w-6 h-6 pointer-events-none"
+                style={{ borderTop: "1px solid rgba(201,160,72,0.55)", borderRight: "1px solid rgba(201,160,72,0.55)" }} />
+              <div className="absolute bottom-3 left-3 w-6 h-6 pointer-events-none"
+                style={{ borderBottom: "1px solid rgba(201,160,72,0.55)", borderLeft: "1px solid rgba(201,160,72,0.55)" }} />
+              <div className="absolute bottom-3 right-3 w-6 h-6 pointer-events-none"
+                style={{ borderBottom: "1px solid rgba(201,160,72,0.55)", borderRight: "1px solid rgba(201,160,72,0.55)" }} />
+            </div>
+
+            {/* Caption strip below portrait */}
+            <div className="mk-photo-tag mt-5 flex items-center justify-between">
+              <span
+                className="font-data text-[10px] tracking-[0.42em] uppercase"
+                style={{ color: "rgba(201,160,72,0.65)" }}
+              >
+                Atelier &middot; {company.city}
+              </span>
+              <span
+                className="font-data text-[9px] tracking-[0.32em] uppercase"
+                style={{ color: "rgba(216,210,200,0.4)" }}
+              >
+                Portrait &middot; in studio
               </span>
             </div>
-          ))}
-        </div>
-
-        {/* ── Divider ───────────────────────────────────────────── */}
-        <div className="sig-divider w-full h-px mb-16 lg:mb-20"
-          style={{ backgroundColor: "rgba(201,160,72,0.28)" }} />
-
-        {/* ── Certifications ────────────────────────────────────── */}
-        <div className="sig-certs grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center mb-16 lg:mb-20">
-          <div className="lg:col-span-4">
-            <p className="font-data text-[10px] tracking-[0.3em] uppercase mb-2"
-              style={{ color: "#8E6E28" }}>
-              Membership & Recognition
-            </p>
-            <p className="text-sm leading-relaxed"
-              style={{ color: "rgba(26,22,18,0.55)" }}>
-              Active credentials with the bodies that audit American cosmetic dentistry.
-            </p>
           </div>
-          <div className="sig-cert-row lg:col-span-8 flex flex-wrap gap-3">
-            {CERTIFS.map((c) => (
+
+          {/* RIGHT — Eyebrow + heading + bio + signature */}
+          <div className="lg:col-span-7 lg:pl-6 lg:pt-4">
+
+            <div
+              className="mk-rule h-px w-16 mb-8"
+              style={{ backgroundColor: "#C9A048" }}
+            />
+
+            <span
+              className="mk-eyebrow font-data text-[11px] tracking-[0.42em] uppercase block mb-6"
+              style={{ color: "rgba(201,160,72,0.75)" }}
+            >
+              The hand
+            </span>
+
+            <h2
+              className="mk-heading font-display"
+              style={{
+                fontSize:      "clamp(2.4rem, 5.5vw, 4.8rem)",
+                lineHeight:    "0.96",
+                letterSpacing: "-0.018em",
+                color:         "#F0EAE0",
+                fontWeight:    400,
+              }}
+            >
+              Signed by{" "}
+              <span style={{ fontStyle: "italic", color: "#C9A048" }}>one hand.</span>
+            </h2>
+
+            <p
+              className="mk-bio mt-10 max-w-xl text-base leading-relaxed"
+              style={{ color: "rgba(216,210,200,0.7)" }}
+            >
+              A single principle&nbsp;: the same hand sees you from consultation through placement.
+              {" "}Cases at {company.name} are not passed between chairs &mdash; each chart carries
+              the signature of the practitioner who owns it, from photograph to polish.
+              Veneers, smile design, implants &mdash; composed for one patient at a time.
+              Never rushed. Never sub-contracted to an off-site lab.
+            </p>
+
+            {/* Hairline divider before the signature */}
+            <div
+              className="mk-divider mt-12 mb-8 h-px w-full"
+              style={{ backgroundColor: "rgba(201,160,72,0.22)" }}
+            />
+
+            {/* Signature SVG — draws itself after the bio settles */}
+            <svg
+              viewBox="0 0 400 100"
+              preserveAspectRatio="xMidYMid meet"
+              className="block"
+              style={{ width: "min(320px, 80%)", height: "auto" }}
+              aria-hidden="true"
+            >
+              <path
+                d="M 16 60
+                   C 30 32, 48 32, 60 56
+                   C 72 80, 90 78, 100 56
+                   C 110 34, 128 34, 140 56
+                   C 150 70, 162 64, 172 52
+                   C 188 36, 210 38, 224 58
+                   C 234 74, 250 70, 266 58
+                   C 282 46, 298 30, 322 38
+                   C 344 46, 358 64, 372 50"
+                stroke="#C9A048"
+                strokeWidth="2.4"
+                fill="none"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                pathLength={1}
+                strokeDasharray="1"
+                strokeDashoffset="1"
+                className="mk-path"
+              />
+              <path
+                d="M 60 80 C 160 80, 260 80, 350 78"
+                stroke="#C9A048"
+                strokeWidth="1.4"
+                fill="none"
+                strokeLinecap="round"
+                pathLength={1}
+                strokeDasharray="1"
+                strokeDashoffset="1"
+                opacity="0.55"
+                className="mk-flourish"
+              />
+            </svg>
+
+            {/* Attribution — generic, no placeholder names */}
+            <div className="mk-attrib mt-6 flex flex-col gap-1">
               <span
-                key={c}
-                className="font-heading text-base font-bold tracking-[0.2em] uppercase px-5 py-3 transition-all duration-300"
-                style={{
-                  border:          "1px solid rgba(201,160,72,0.4)",
-                  color:           "#8E6E28",
-                  backgroundColor: "rgba(201,160,72,0.05)",
-                }}
-                onMouseEnter={(e) => {
-                  const el = e.currentTarget as HTMLElement;
-                  el.style.borderColor     = "rgba(201,160,72,0.7)";
-                  el.style.color           = "#C9A048";
-                  el.style.backgroundColor = "rgba(201,160,72,0.12)";
-                }}
-                onMouseLeave={(e) => {
-                  const el = e.currentTarget as HTMLElement;
-                  el.style.borderColor     = "rgba(201,160,72,0.4)";
-                  el.style.color           = "#8E6E28";
-                  el.style.backgroundColor = "rgba(201,160,72,0.05)";
-                }}
+                className="font-data text-xs tracking-[0.28em] uppercase"
+                style={{ color: "#C9A048" }}
               >
-                {c}
+                {company.name}
               </span>
-            ))}
-          </div>
-        </div>
-
-        {/* ── Divider ───────────────────────────────────────────── */}
-        <div className="sig-divider w-full h-px mb-16 lg:mb-20"
-          style={{ backgroundColor: "rgba(201,160,72,0.28)" }} />
-
-        {/* ── Voices ────────────────────────────────────────────── */}
-        <div className="sig-voices">
-          <p className="font-data text-[10px] tracking-[0.3em] uppercase mb-10"
-            style={{ color: "#8E6E28" }}>
-            In Their Own Words
-          </p>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-12">
-            {VOICES.map((v) => (
-              <figure
-                key={v.name}
-                className="sig-voice relative pl-6 pt-2"
+              <span
+                className="font-data text-[10px] tracking-[0.28em] uppercase"
+                style={{ color: "rgba(216,210,200,0.5)" }}
               >
-                {/* Gold quote stroke — slightly stronger on light bg */}
-                <div className="absolute left-0 top-0 bottom-0 w-px"
-                  style={{ background: "linear-gradient(to bottom, #C9A048 0%, rgba(201,160,72,0.18) 100%)" }} />
-                <span className="absolute left-0 -top-3 font-heading text-3xl font-extrabold leading-none italic"
-                  style={{ color: "#C9A048" }}>
-                  &ldquo;
-                </span>
-
-                <blockquote className="font-heading italic text-lg leading-snug mb-7"
-                  style={{ color: "#1A1612", textTransform: "none", letterSpacing: "-0.005em" }}>
-                  {v.quote}
-                </blockquote>
-
-                <figcaption>
-                  <p className="font-data text-xs tracking-wider mb-1"
-                    style={{ color: "#8E6E28" }}>
-                    {v.name}
-                  </p>
-                  <p className="font-data text-[10px] tracking-[0.25em] uppercase"
-                    style={{ color: "rgba(26,22,18,0.45)" }}>
-                    {v.treatment}
-                  </p>
-                </figcaption>
-              </figure>
-            ))}
+                Atelier &middot; {company.city}
+              </span>
+            </div>
           </div>
-        </div>
-
-        {/* ── Signature line ────────────────────────────────────── */}
-        <div className="sig-sign mt-20 lg:mt-24 flex flex-col items-center text-center">
-          <div className="flex items-center gap-4 mb-3">
-            <div className="w-10 h-px" style={{ backgroundColor: "rgba(201,160,72,0.45)" }} />
-            <span style={{ color: "#C9A048", fontSize: "0.7rem" }}>◆</span>
-            <div className="w-10 h-px" style={{ backgroundColor: "rgba(201,160,72,0.45)" }} />
-          </div>
-          <p className="font-heading italic text-base mb-1"
-            style={{ color: "rgba(26,22,18,0.6)", textTransform: "none", letterSpacing: 0 }}>
-            Every chart signed personally — never delegated.
-          </p>
-          <p className="font-data text-[10px] tracking-[0.32em] uppercase"
-            style={{ color: "rgba(26,22,18,0.45)" }}>
-            {company.name}
-          </p>
         </div>
       </div>
     </section>

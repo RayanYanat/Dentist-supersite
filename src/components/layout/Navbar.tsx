@@ -23,9 +23,10 @@ import type { CompanyData } from "@/lib/types";
  */
 
 /* Section IDs whose background is the LIGHT register.
- * Scene II (#craft) is now dark like the rest of the storytelling — only
- * Signature (the testimonials breath) remains in light register. */
-const LIGHT_SECTIONS = new Set<string>(["#signature"]);
+ * The site is now uniformly dark register — every section reads as the
+ * same continuous cinematic. The Set stays as the seam for future
+ * additions; no IDs currently qualify. */
+const LIGHT_SECTIONS = new Set<string>([]);
 
 export default function Navbar({ company }: { company: CompanyData }) {
   const [scrolled, setScrolled]           = useState(false);

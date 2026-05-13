@@ -3,33 +3,31 @@ import { useRef, useState, FormEvent } from "react";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import ScrollTrigger from "gsap/ScrollTrigger";
-import { Phone, Mail, MapPin, Clock, ArrowRight, Check } from "lucide-react";
+import { ArrowRight, Check } from "lucide-react";
 import CharText from "@/components/shared/CharText";
 import type { CompanyData } from "@/lib/types";
 
 /**
- * "Begin Your Journey" — premium booking pane, not a generic contact form.
+ * Scene V — "The Invitation"
  *
- * The journey starts with a conversation, not a 10-field intake. Three
- * fields only (name · phone-or-email · treatment of interest) plus an
- * optional note. Submit simulates a successful reservation and animates
- * the form into a "thank you" state — no real backend call: in this
- * outreach model, the actual conversion is the phone follow-up that the
- * prospect's reply triggers, not a form POST.
+ * Replaces the 4-field form-as-centerpiece with a private-appointment
+ * card. The previous version put a generic Contact form at the heart of
+ * the section — that's how every dental site closes, which is the
+ * problem.
  *
- * Right rail carries the directly callable contact data (phone, email,
- * address, atelier hours) which is, in practice, the channel that closes.
+ * The new architecture inverts the priority:
+ *
+ *   - The PHONE NUMBER is the centerpiece. Big, italic, hand-written in
+ *     spirit. The luxury thing is that the patient calls.
+ *   - The atelier address and hours sit as quiet factual lines below.
+ *   - A two-field card (name + phone) is offered as a discreet
+ *     alternative for those who'd rather be called back.
+ *   - A closing italic line: "We don't take walk-ins. Every visit is
+ *     composed."
+ *
+ * Stays in the dark register — closes the storytelling arc that opened
+ * with Scene I (also dark).
  */
-
-const TREATMENTS = [
-  "Porcelain Veneers",
-  "Smile Design",
-  "Dental Implants",
-  "Whitening",
-  "Clear Aligners",
-  "Cosmetic Bonding",
-  "Other / Not sure yet",
-];
 
 const HOURS = [
   ["Tue – Fri", "9:00 — 18:00"],
@@ -45,25 +43,41 @@ export default function ContactSection({ company }: { company: CompanyData }) {
     () => {
       gsap.registerPlugin(ScrollTrigger);
 
-      gsap.set(".contact-meta",    { opacity: 0, x: -10 });
-      gsap.set(".contact-eyebrow", { opacity: 0, y: 20 });
-      gsap.set(".contact-lede",    { opacity: 0, y: 20 });
-      gsap.set(".char-reveal",     { y: "115%", opacity: 0 });
-      gsap.set(".contact-form",    { opacity: 0, y: 50 });
-      gsap.set(".contact-rail",    { opacity: 0, y: 50 });
+      gsap.set(".inv-meta",     { opacity: 0, x: -10 });
+      gsap.set(".inv-eyebrow",  { opacity: 0, y: 18 });
+      gsap.set(".char-reveal",  { y: "115%", opacity: 0 });
+      gsap.set(".inv-lede",     { opacity: 0, y: 20 });
+      gsap.set(".inv-phone",    { opacity: 0, y: 32 });
+      gsap.set(".inv-phone-cap",{ opacity: 0, y: 14 });
+      gsap.set(".inv-rule",     { scaleX: 0, transformOrigin: "left center" });
+      gsap.set(".inv-detail",   { opacity: 0, y: 22 });
+      gsap.set(".inv-card",     { opacity: 0, y: 30 });
+      gsap.set(".inv-coda",     { opacity: 0, y: 14 });
 
       ScrollTrigger.create({
         trigger: sectionRef.current,
-        start:   "top 82%",
+        start:   "top 80%",
         once:    true,
         onEnter: () => {
           const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
-          tl.to(".contact-meta",    { opacity: 1, x: 0, duration: 0.6 }, 0)
-            .to(".contact-eyebrow", { opacity: 1, y: 0, duration: 0.6 }, 0.1)
-            .to(".char-reveal",     { y: "0%", opacity: 1, duration: 0.85, stagger: 0.022 }, 0.25)
-            .to(".contact-lede",    { opacity: 1, y: 0, duration: 0.7 }, 0.8)
-            .to(".contact-form",    { opacity: 1, y: 0, duration: 0.9 }, 0.6)
-            .to(".contact-rail",    { opacity: 1, y: 0, duration: 0.9 }, 0.75);
+          tl.to(".inv-meta",      { opacity: 1, x: 0, duration: 0.6 },             0)
+            .to(".inv-eyebrow",   { opacity: 1, y: 0, duration: 0.6 },             0.1)
+            .to(".char-reveal",   { y: "0%", opacity: 1, duration: 0.85, stagger: 0.022 }, 0.25)
+            .to(".inv-lede",      { opacity: 1, y: 0, duration: 0.7 },             0.8)
+            .to(".inv-phone",     { opacity: 1, y: 0, duration: 1.1 },             1.0)
+            .to(".inv-phone-cap", { opacity: 1, y: 0, duration: 0.6 },             1.4)
+            .to(".inv-rule",      { scaleX: 1, duration: 1.0, ease: "expo.out" }, 1.4)
+            .to(".inv-detail",    { opacity: 1, y: 0, duration: 0.7, stagger: 0.1 }, 1.55)
+            .to(".inv-card",      { opacity: 1, y: 0, duration: 0.9 },             1.8);
+        },
+      });
+
+      ScrollTrigger.create({
+        trigger: ".inv-coda",
+        start:   "top 92%",
+        once:    true,
+        onEnter: () => {
+          gsap.to(".inv-coda", { opacity: 1, y: 0, duration: 0.9, ease: "power2.out" });
         },
       });
     },
@@ -73,8 +87,7 @@ export default function ContactSection({ company }: { company: CompanyData }) {
   function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setSubmitted(true);
-    /* Visual-only success — the prospect's actual conversion path is the
-       phone follow-up, not a server-side form handler. */
+    /* Visual-only success — actual conversion is the phone follow-up. */
   }
 
   return (
@@ -90,7 +103,7 @@ export default function ContactSection({ company }: { company: CompanyData }) {
         style={{ background: "linear-gradient(to right, transparent, rgba(201,160,72,0.3), transparent)" }}
       />
 
-      {/* Ambient gold glows */}
+      {/* Ambient gold glow */}
       <div
         className="absolute top-1/4 -left-32 w-[600px] h-[600px] rounded-full pointer-events-none"
         style={{
@@ -98,20 +111,11 @@ export default function ContactSection({ company }: { company: CompanyData }) {
           animation:  "breathe-gold 14s ease-in-out infinite",
         }}
       />
-      <div
-        className="absolute bottom-1/4 -right-32 w-[500px] h-[500px] rounded-full pointer-events-none"
-        style={{
-          background:     "radial-gradient(ellipse at center, rgba(240,234,224,0.05) 0%, transparent 65%)",
-          animation:      "breathe-gold 18s ease-in-out infinite reverse",
-          animationDelay: "5s",
-        }}
-      />
 
-      <div className="relative max-w-7xl mx-auto px-5 lg:px-8">
+      <div className="relative max-w-5xl mx-auto px-5 lg:px-8">
 
-        {/* Scene V chapter indicator — inline above the header.
-            Closes the storytelling arc opened by Scene I. */}
-        <div className="contact-meta flex items-center gap-3 mb-10 lg:mb-14">
+        {/* Chapter indicator */}
+        <div className="inv-meta flex items-center gap-3 mb-10 lg:mb-14">
           <span
             className="inline-block w-1.5 h-1.5 rounded-full"
             style={{ backgroundColor: "#C9A048", animation: "caret-pulse 1.8s ease-in-out infinite" }}
@@ -124,280 +128,260 @@ export default function ContactSection({ company }: { company: CompanyData }) {
           </span>
         </div>
 
-        {/* ── Header ────────────────────────────────────────────── */}
+        {/* ── Header ─────────────────────────────────────────────── */}
         <div className="mb-16 lg:mb-20 max-w-3xl">
-          <div className="contact-eyebrow flex items-center gap-3 mb-6">
+          <div className="inv-eyebrow flex items-center gap-3 mb-6">
             <div className="w-6 h-px" style={{ backgroundColor: "#C9A048" }} />
-            <span className="font-data text-[11px] tracking-[0.3em] uppercase"
-              style={{ color: "rgba(201,160,72,0.75)" }}>
-              Contact
+            <span
+              className="font-data text-[11px] tracking-[0.3em] uppercase"
+              style={{ color: "rgba(201,160,72,0.75)" }}
+            >
+              Begin a private conversation
             </span>
           </div>
-          <h2 className="font-heading text-[clamp(2.4rem,6vw,5.5rem)] leading-[0.92] font-extrabold mb-6"
-            style={{ color: "#D8D2C8" }}>
+          <h2
+            className="font-display"
+            style={{
+              fontSize:      "clamp(2.4rem, 6vw, 5.2rem)",
+              lineHeight:    "0.96",
+              letterSpacing: "-0.02em",
+              color:         "#F0EAE0",
+              fontWeight:    400,
+            }}
+          >
             <span className="block overflow-hidden" style={{ paddingTop: "0.05em", paddingBottom: "0.08em" }}>
-              <CharText text="Begin your" />
+              <CharText text="An invitation," />
             </span>
             <span className="block overflow-hidden italic" style={{ color: "#C9A048", paddingTop: "0.05em", paddingBottom: "0.12em" }}>
-              <CharText text="journey." />
+              <CharText text="composed." />
             </span>
           </h2>
-          <p className="contact-lede text-base leading-relaxed max-w-xl"
-            style={{ color: "rgba(216,210,200,0.45)" }}>
-            A consultation begins with a conversation — not a form.
-            Tell us a little, and the practice will reach out to schedule
-            your first visit, on your terms.
+          <p
+            className="inv-lede mt-8 text-base leading-relaxed max-w-xl"
+            style={{ color: "rgba(216,210,200,0.55)" }}
+          >
+            A consultation begins with a phone call &mdash; not a portal.
+            The practice will know your name before you arrive.
           </p>
         </div>
 
-        {/* ── Two-column layout ─────────────────────────────────── */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12">
-
-          {/* ── Form ────────────────────────────────────────────── */}
-          <div className="contact-form lg:col-span-7 relative p-8 lg:p-12"
+        {/* ── The phone — the centerpiece ────────────────────────── */}
+        <div className="mb-20 lg:mb-24 flex flex-col items-start">
+          <a
+            href={`tel:${company.phone}`}
+            className="inv-phone font-display italic group inline-block"
             style={{
-              backgroundColor: "#141210",
-              border:          "1px solid rgba(201,160,72,0.15)",
-            }}>
-
-            {/* Corner brackets */}
-            <div className="absolute top-3 left-3 w-6 h-6 pointer-events-none"
-              style={{ borderTop: "1px solid rgba(201,160,72,0.4)", borderLeft: "1px solid rgba(201,160,72,0.4)" }} />
-            <div className="absolute bottom-3 right-3 w-6 h-6 pointer-events-none"
-              style={{ borderBottom: "1px solid rgba(201,160,72,0.4)", borderRight: "1px solid rgba(201,160,72,0.4)" }} />
-
-            {!submitted ? (
-              <form onSubmit={handleSubmit} className="flex flex-col gap-7">
-                <div>
-                  <p className="font-data text-[10px] tracking-[0.32em] uppercase mb-2"
-                    style={{ color: "rgba(201,160,72,0.7)" }}>
-                    Reservation Inquiry
-                  </p>
-                  <h3 className="font-heading text-2xl font-bold italic"
-                    style={{ color: "#D8D2C8", textTransform: "none", letterSpacing: "-0.005em" }}>
-                    Tell us a little.
-                  </h3>
-                </div>
-
-                <Field label="Full Name" htmlFor="name">
-                  <input id="name" name="name" type="text" required
-                    placeholder="—"
-                    className="w-full bg-transparent outline-none text-base font-medium pb-2 transition-colors duration-300"
-                    style={{
-                      color:          "#D8D2C8",
-                      borderBottom:   "1px solid rgba(201,160,72,0.2)",
-                    }}
-                    onFocus={(e) => { e.currentTarget.style.borderBottomColor = "#C9A048"; }}
-                    onBlur={(e)  => { e.currentTarget.style.borderBottomColor = "rgba(201,160,72,0.2)"; }}
-                  />
-                </Field>
-
-                <Field label="Phone or Email" htmlFor="contact">
-                  <input id="contact" name="contact" type="text" required
-                    placeholder="—"
-                    className="w-full bg-transparent outline-none text-base font-medium pb-2 transition-colors duration-300"
-                    style={{
-                      color:        "#D8D2C8",
-                      borderBottom: "1px solid rgba(201,160,72,0.2)",
-                    }}
-                    onFocus={(e) => { e.currentTarget.style.borderBottomColor = "#C9A048"; }}
-                    onBlur={(e)  => { e.currentTarget.style.borderBottomColor = "rgba(201,160,72,0.2)"; }}
-                  />
-                </Field>
-
-                <Field label="Treatment of Interest" htmlFor="treatment">
-                  <select id="treatment" name="treatment" required
-                    className="w-full bg-transparent outline-none text-base font-medium pb-2 transition-colors duration-300 appearance-none cursor-pointer"
-                    style={{
-                      color:        "#D8D2C8",
-                      borderBottom: "1px solid rgba(201,160,72,0.2)",
-                    }}
-                    onFocus={(e) => { e.currentTarget.style.borderBottomColor = "#C9A048"; }}
-                    onBlur={(e)  => { e.currentTarget.style.borderBottomColor = "rgba(201,160,72,0.2)"; }}
-                    defaultValue=""
-                  >
-                    <option value="" disabled style={{ backgroundColor: "#141210", color: "rgba(216,210,200,0.4)" }}>
-                      —
-                    </option>
-                    {TREATMENTS.map((t) => (
-                      <option key={t} value={t} style={{ backgroundColor: "#141210", color: "#D8D2C8" }}>
-                        {t}
-                      </option>
-                    ))}
-                  </select>
-                </Field>
-
-                <Field label="A Note (optional)" htmlFor="note">
-                  <textarea id="note" name="note" rows={3}
-                    placeholder="—"
-                    className="w-full bg-transparent outline-none text-base font-medium pb-2 resize-none transition-colors duration-300"
-                    style={{
-                      color:        "#D8D2C8",
-                      borderBottom: "1px solid rgba(201,160,72,0.2)",
-                    }}
-                    onFocus={(e) => { e.currentTarget.style.borderBottomColor = "#C9A048"; }}
-                    onBlur={(e)  => { e.currentTarget.style.borderBottomColor = "rgba(201,160,72,0.2)"; }}
-                  />
-                </Field>
-
-                <button type="submit"
-                  className="group relative mt-2 flex items-center justify-center gap-3 px-8 py-4 text-xs font-bold tracking-[0.22em] uppercase overflow-hidden transition-all duration-300 self-start"
-                  style={{ backgroundColor: "#C9A048", color: "#0C0B09" }}
-                  onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.backgroundColor = "#8E6E28"; }}
-                  onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.backgroundColor = "#C9A048"; }}
-                >
-                  <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700"
-                    style={{ background: "linear-gradient(to right, transparent, rgba(255,255,255,0.2), transparent)" }} />
-                  <span>Reserve a Consultation</span>
-                  <ArrowRight size={13} className="group-hover:translate-x-1.5 transition-transform duration-200" />
-                </button>
-
-                <p className="font-data text-[10px] tracking-wider"
-                  style={{ color: "rgba(216,210,200,0.3)" }}>
-                  We respond within 24 hours · No automated replies
-                </p>
-              </form>
-            ) : (
-              <div className="flex flex-col items-center text-center py-12 gap-6">
-                <div className="w-14 h-14 rounded-full flex items-center justify-center"
-                  style={{ backgroundColor: "rgba(201,160,72,0.12)", border: "1px solid rgba(201,160,72,0.4)" }}>
-                  <Check size={22} style={{ color: "#C9A048" }} />
-                </div>
-                <div>
-                  <p className="font-data text-[10px] tracking-[0.3em] uppercase mb-2"
-                    style={{ color: "rgba(201,160,72,0.7)" }}>
-                    Reservation Received
-                  </p>
-                  <h3 className="font-heading text-2xl font-bold italic mb-3"
-                    style={{ color: "#D8D2C8", textTransform: "none", letterSpacing: "-0.005em" }}>
-                    Thank you.
-                  </h3>
-                  <p className="text-sm leading-relaxed max-w-md"
-                    style={{ color: "rgba(216,210,200,0.5)" }}>
-                    The practice will be in touch within the day to schedule your first visit.
-                    For anything urgent, call us directly at{" "}
-                    <a href={`tel:${company.phone}`} className="underline"
-                      style={{ color: "#C9A048" }}>
-                      {company.phone}
-                    </a>.
-                  </p>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* ── Right rail — direct contact ─────────────────────── */}
-          <div className="contact-rail lg:col-span-5 flex flex-col gap-5">
-
-            {/* Phone */}
-            <a href={`tel:${company.phone}`}
-              className="group relative p-7 transition-all duration-300"
-              style={{
-                backgroundColor: "rgba(201,160,72,0.04)",
-                border:          "1px solid rgba(201,160,72,0.15)",
-              }}
-              onMouseEnter={(e) => {
-                const el = e.currentTarget as HTMLElement;
-                el.style.borderColor     = "rgba(201,160,72,0.5)";
-                el.style.backgroundColor = "rgba(201,160,72,0.08)";
-              }}
-              onMouseLeave={(e) => {
-                const el = e.currentTarget as HTMLElement;
-                el.style.borderColor     = "rgba(201,160,72,0.15)";
-                el.style.backgroundColor = "rgba(201,160,72,0.04)";
-              }}
+              fontSize:      "clamp(2.4rem, 6.5vw, 5.8rem)",
+              lineHeight:    "1.0",
+              letterSpacing: "-0.02em",
+              color:         "#F0EAE0",
+              fontWeight:    400,
+              textDecoration: "none",
+            }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = "#C9A048"; }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = "#F0EAE0"; }}
+          >
+            {company.phone}
+            <span
+              className="ml-3 align-middle inline-block transition-transform duration-300 group-hover:translate-x-2"
+              style={{ color: "#C9A048", fontSize: "0.42em" }}
             >
-              <div className="flex items-center justify-between mb-4">
-                <span className="font-data text-[10px] tracking-[0.3em] uppercase"
-                  style={{ color: "rgba(201,160,72,0.6)" }}>
-                  Direct Line
-                </span>
-                <Phone size={15} style={{ color: "#C9A048" }} />
-              </div>
-              <p className="font-heading text-2xl font-bold tracking-tight"
-                style={{ color: "#D8D2C8", textTransform: "none" }}>
-                {company.phone}
-              </p>
-              <p className="font-data text-[10px] tracking-wider mt-2"
-                style={{ color: "rgba(216,210,200,0.35)" }}>
-                Tap to call
-              </p>
-            </a>
+              &rarr;
+            </span>
+          </a>
+          <p
+            className="inv-phone-cap mt-6 font-data text-[11px] tracking-[0.32em] uppercase"
+            style={{ color: "rgba(201,160,72,0.7)" }}
+          >
+            Direct line &middot; We answer personally within 24 hours
+          </p>
+        </div>
 
-            {/* Email */}
-            {company.email && (
-              <a href={`mailto:${company.email}`}
-                className="group relative p-7 transition-all duration-300"
-                style={{
-                  backgroundColor: "#141210",
-                  border:          "1px solid rgba(201,160,72,0.1)",
-                }}
-                onMouseEnter={(e) => {
-                  const el = e.currentTarget as HTMLElement;
-                  el.style.borderColor = "rgba(201,160,72,0.4)";
-                }}
-                onMouseLeave={(e) => {
-                  const el = e.currentTarget as HTMLElement;
-                  el.style.borderColor = "rgba(201,160,72,0.1)";
-                }}
-              >
-                <div className="flex items-center justify-between mb-4">
-                  <span className="font-data text-[10px] tracking-[0.3em] uppercase"
-                    style={{ color: "rgba(201,160,72,0.6)" }}>
-                    Correspondence
-                  </span>
-                  <Mail size={15} style={{ color: "#C9A048" }} />
-                </div>
-                <p className="font-heading text-base font-bold tracking-tight break-all"
-                  style={{ color: "#D8D2C8", textTransform: "none" }}>
-                  {company.email}
-                </p>
-              </a>
-            )}
+        {/* Hairline divider before factual strip */}
+        <div
+          className="inv-rule h-px w-full mb-12 lg:mb-16"
+          style={{ backgroundColor: "rgba(201,160,72,0.18)" }}
+        />
 
-            {/* Address + Hours */}
-            <div className="relative p-7"
-              style={{
-                backgroundColor: "#141210",
-                border:          "1px solid rgba(201,160,72,0.1)",
-              }}>
-              <div className="flex items-center justify-between mb-4">
-                <span className="font-data text-[10px] tracking-[0.3em] uppercase"
-                  style={{ color: "rgba(201,160,72,0.6)" }}>
-                  The Atelier
-                </span>
-                <MapPin size={15} style={{ color: "#C9A048" }} />
-              </div>
-              {company.address ? (
-                <p className="text-sm leading-relaxed mb-5"
-                  style={{ color: "rgba(216,210,200,0.7)" }}>
-                  {company.address}
-                </p>
-              ) : (
-                <p className="text-sm leading-relaxed mb-5"
-                  style={{ color: "rgba(216,210,200,0.7)" }}>
-                  {company.zone}
-                </p>
-              )}
+        {/* ── Factual strip — atelier / hours / correspondence ──── */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-12 mb-20 lg:mb-24">
 
-              <div className="flex items-center gap-2 mb-3 pt-4"
-                style={{ borderTop: "1px solid rgba(201,160,72,0.08)" }}>
-                <Clock size={11} style={{ color: "rgba(201,160,72,0.55)" }} />
-                <span className="font-data text-[10px] tracking-[0.28em] uppercase"
-                  style={{ color: "rgba(201,160,72,0.55)" }}>
-                  Atelier Hours
-                </span>
-              </div>
-              <dl className="space-y-1.5">
-                {HOURS.map(([day, hours]) => (
-                  <div key={day} className="flex justify-between text-xs">
-                    <dt style={{ color: "rgba(216,210,200,0.45)" }}>{day}</dt>
-                    <dd className="font-data" style={{ color: "rgba(216,210,200,0.65)" }}>{hours}</dd>
-                  </div>
-                ))}
-              </dl>
-            </div>
+          <div className="inv-detail">
+            <span
+              className="font-data text-[10px] tracking-[0.42em] uppercase block mb-4"
+              style={{ color: "rgba(201,160,72,0.6)" }}
+            >
+              The Atelier
+            </span>
+            <p className="text-sm leading-relaxed" style={{ color: "rgba(216,210,200,0.7)" }}>
+              {company.address || company.zone}
+            </p>
           </div>
+
+          <div className="inv-detail">
+            <span
+              className="font-data text-[10px] tracking-[0.42em] uppercase block mb-4"
+              style={{ color: "rgba(201,160,72,0.6)" }}
+            >
+              Atelier Hours
+            </span>
+            <dl className="space-y-1.5">
+              {HOURS.map(([day, hours]) => (
+                <div key={day} className="flex justify-between text-xs">
+                  <dt style={{ color: "rgba(216,210,200,0.45)" }}>{day}</dt>
+                  <dd className="font-data" style={{ color: "rgba(216,210,200,0.7)" }}>{hours}</dd>
+                </div>
+              ))}
+            </dl>
+          </div>
+
+          {company.email && (
+            <div className="inv-detail">
+              <span
+                className="font-data text-[10px] tracking-[0.42em] uppercase block mb-4"
+                style={{ color: "rgba(201,160,72,0.6)" }}
+              >
+                Correspondence
+              </span>
+              <a
+                href={`mailto:${company.email}`}
+                className="text-sm leading-relaxed transition-colors duration-200 break-all"
+                style={{ color: "rgba(216,210,200,0.7)" }}
+                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = "#C9A048"; }}
+                onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = "rgba(216,210,200,0.7)"; }}
+              >
+                {company.email}
+              </a>
+            </div>
+          )}
+        </div>
+
+        {/* ── Discreet two-field card — "or have us call you" ───── */}
+        <div className="inv-card relative max-w-xl mx-auto p-8 lg:p-10"
+          style={{
+            backgroundColor: "rgba(20,18,16,0.7)",
+            border:          "1px solid rgba(201,160,72,0.18)",
+          }}
+        >
+          {/* Corner brackets */}
+          <div className="absolute top-3 left-3 w-5 h-5 pointer-events-none"
+            style={{ borderTop: "1px solid rgba(201,160,72,0.4)", borderLeft: "1px solid rgba(201,160,72,0.4)" }} />
+          <div className="absolute bottom-3 right-3 w-5 h-5 pointer-events-none"
+            style={{ borderBottom: "1px solid rgba(201,160,72,0.4)", borderRight: "1px solid rgba(201,160,72,0.4)" }} />
+
+          {!submitted ? (
+            <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+              <div>
+                <p
+                  className="font-data text-[10px] tracking-[0.32em] uppercase mb-2"
+                  style={{ color: "rgba(201,160,72,0.7)" }}
+                >
+                  Or have us call you
+                </p>
+                <h3
+                  className="font-display italic"
+                  style={{
+                    fontSize:      "clamp(1.3rem, 2vw, 1.5rem)",
+                    color:         "#F0EAE0",
+                    letterSpacing: "-0.005em",
+                    fontWeight:    400,
+                  }}
+                >
+                  Leave your name and the practice will reach out.
+                </h3>
+              </div>
+
+              <Field label="Name" htmlFor="inv-name">
+                <input
+                  id="inv-name" name="name" type="text" required
+                  placeholder="—"
+                  autoComplete="name"
+                  className="w-full bg-transparent outline-none text-base font-medium pb-2 transition-colors duration-300"
+                  style={{ color: "#D8D2C8", borderBottom: "1px solid rgba(201,160,72,0.22)" }}
+                  onFocus={(e) => { e.currentTarget.style.borderBottomColor = "#C9A048"; }}
+                  onBlur={(e)  => { e.currentTarget.style.borderBottomColor = "rgba(201,160,72,0.22)"; }}
+                />
+              </Field>
+
+              <Field label="Phone" htmlFor="inv-phone-input">
+                <input
+                  id="inv-phone-input" name="phone" type="tel" required
+                  placeholder="—"
+                  autoComplete="tel"
+                  className="w-full bg-transparent outline-none text-base font-medium pb-2 transition-colors duration-300"
+                  style={{ color: "#D8D2C8", borderBottom: "1px solid rgba(201,160,72,0.22)" }}
+                  onFocus={(e) => { e.currentTarget.style.borderBottomColor = "#C9A048"; }}
+                  onBlur={(e)  => { e.currentTarget.style.borderBottomColor = "rgba(201,160,72,0.22)"; }}
+                />
+              </Field>
+
+              <button
+                type="submit"
+                className="group relative mt-2 flex items-center justify-center gap-3 px-6 py-3.5 text-xs font-bold tracking-[0.22em] uppercase overflow-hidden transition-all duration-300 self-start"
+                style={{ backgroundColor: "#C9A048", color: "#0C0B09" }}
+                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.backgroundColor = "#D9B25C"; }}
+                onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.backgroundColor = "#C9A048"; }}
+              >
+                <span
+                  className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 pointer-events-none"
+                  style={{ background: "linear-gradient(to right, transparent, rgba(255,255,255,0.28), transparent)" }}
+                />
+                <span>Request appointment</span>
+                <ArrowRight size={12} className="group-hover:translate-x-1.5 transition-transform duration-200" />
+              </button>
+            </form>
+          ) : (
+            <div className="flex flex-col items-center text-center py-8 gap-5">
+              <div
+                className="w-12 h-12 rounded-full flex items-center justify-center"
+                style={{ backgroundColor: "rgba(201,160,72,0.12)", border: "1px solid rgba(201,160,72,0.4)" }}
+              >
+                <Check size={20} style={{ color: "#C9A048" }} />
+              </div>
+              <div>
+                <p
+                  className="font-data text-[10px] tracking-[0.32em] uppercase mb-2"
+                  style={{ color: "rgba(201,160,72,0.7)" }}
+                >
+                  Reservation received
+                </p>
+                <h3
+                  className="font-display italic mb-2"
+                  style={{
+                    fontSize:      "1.4rem",
+                    color:         "#F0EAE0",
+                    letterSpacing: "-0.005em",
+                    fontWeight:    400,
+                  }}
+                >
+                  Thank you.
+                </h3>
+                <p className="text-sm leading-relaxed max-w-md" style={{ color: "rgba(216,210,200,0.55)" }}>
+                  The practice will be in touch within the day to schedule your first visit.
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* ── Coda — italic closing line ────────────────────────── */}
+        <div className="inv-coda mt-20 lg:mt-24 flex flex-col items-center text-center gap-3">
+          <div className="flex items-center gap-4">
+            <div className="w-10 h-px" style={{ backgroundColor: "rgba(201,160,72,0.45)" }} />
+            <span style={{ color: "#C9A048", fontSize: "0.7rem" }}>&#9670;</span>
+            <div className="w-10 h-px" style={{ backgroundColor: "rgba(201,160,72,0.45)" }} />
+          </div>
+          <p
+            className="font-display italic"
+            style={{
+              fontSize:      "clamp(1rem, 1.6vw, 1.2rem)",
+              color:         "rgba(216,210,200,0.65)",
+              letterSpacing: "-0.005em",
+              fontWeight:    400,
+            }}
+          >
+            We don&rsquo;t take walk-ins. Every visit is composed.
+          </p>
         </div>
       </div>
     </section>
@@ -416,9 +400,11 @@ function Field({
 }) {
   return (
     <div>
-      <label htmlFor={htmlFor}
+      <label
+        htmlFor={htmlFor}
         className="block font-data text-[10px] tracking-[0.3em] uppercase mb-3"
-        style={{ color: "rgba(201,160,72,0.55)" }}>
+        style={{ color: "rgba(201,160,72,0.55)" }}
+      >
         {label}
       </label>
       {children}

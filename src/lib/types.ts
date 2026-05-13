@@ -14,6 +14,10 @@ export interface CompanyData {
   zone:    string;
   phone:   string;
   email:   string | null;
-  license: string | null;
   address: string | null;
+  rating:  number | null;
+  reviews_count: number | null;
+  website: string | null;
+  instagram: string | null;
+  facebook:  string | null;
 }
