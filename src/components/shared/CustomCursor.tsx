@@ -107,7 +107,7 @@ export default function CustomCursor() {
       <div
         ref={dotRef}
         aria-hidden="true"
-        className="fixed top-0 left-0 pointer-events-none"
+        className="atelier-cursor fixed top-0 left-0 pointer-events-none"
         style={{
           zIndex:          9999,
           width:           "4px",
@@ -116,12 +116,15 @@ export default function CustomCursor() {
           borderRadius:    "50%",
           willChange:      "transform",
           transition:      "width 0.15s, height 0.15s, background-color 0.15s",
+          /* Initial transform parks the dot off-screen so it never flashes
+             at the top-left before the first mousemove event arrives. */
+          transform:       "translate(-200px, -200px)",
         }}
       />
       <div
         ref={ringRef}
         aria-hidden="true"
-        className="fixed top-0 left-0 pointer-events-none"
+        className="atelier-cursor fixed top-0 left-0 pointer-events-none"
         style={{
           zIndex:       9999,
           width:        "28px",
@@ -131,6 +134,8 @@ export default function CustomCursor() {
           willChange:   "transform",
           transition:   "width 0.25s ease, height 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease",
           boxShadow:    "0 0 8px rgba(201,160,72,0.10)",
+          /* Initial transform parks the ring off-screen — see dot note. */
+          transform:    "translate(-200px, -200px)",
         }}
       />
     </>

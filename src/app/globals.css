@@ -132,10 +132,20 @@
 
 /* ── Scene 1 — Hero scroll storytelling ────────────────────────────────── */
 /* The portrait & veils are styled inline (not via class FOUC) since they
-   need to be visible on first paint — only TEXT moments need FOUC hiding. */
-.s1-line,
-.s1-final,
+   need to be visible on first paint — only TEXT moments need FOUC hiding.
+   Every animated text/UI element gets opacity:0 here so the user never
+   sees them all stacked at default-visible state for the ~50–300ms before
+   GSAP hydrates and the timeline starts.
+
+   NOTE: keep this in sync with the className list used in HeroSection.tsx
+   — any new s1-* animated element MUST be added here too, otherwise it
+   flashes on first paint. */
+.s1-line-a,
+.s1-line-b,
+.s1-masthead,
+.s1-sub,
 .s1-cta,
+.s1-cue,
 .s1-meta,
 .s1-rail,
 .s1-rail-grow {
@@ -150,6 +160,18 @@
 .s1-veil-bottom {
   /* visible by default — they ARE the curtain at scroll = 0 */
   transform: translateY(0);
+}
+
+/* ── Custom cursor — hide on touch devices ──────────────────────────────
+ * The CustomCursor useEffect early-returns on pointer:coarse, but the
+ * dot/ring divs still render at their initial top:0/left:0 with no
+ * transform — leaving two small gold squares stuck in the top-left
+ * corner of the viewport on mobile. Hide them with CSS as a fail-safe
+ * regardless of JS execution order. */
+@media (pointer: coarse), (hover: none) {
+  .atelier-cursor {
+    display: none !important;
+  }
 }
 
 /* ── LockedScreen — / route ──────────────────────────────────────────── */
