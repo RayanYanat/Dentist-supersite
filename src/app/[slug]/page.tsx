@@ -16,7 +16,6 @@ import HeroSection      from "@/sections/HeroSection";
 import CraftSection     from "@/sections/CraftSection";
 import AtelierSection   from "@/sections/AtelierSection";
 import GallerySection   from "@/sections/GallerySection";
-import PullQuoteSection from "@/sections/PullQuoteSection";
 import MakerSection     from "@/sections/SignatureSection"; /* file name kept; chapter is "The Team" */
 import ContactSection   from "@/sections/ContactSection";
 
@@ -116,7 +115,6 @@ export default async function SlugPage({
         <CraftSection     company={company} />
         <AtelierSection   company={company} />
         <GallerySection   company={company} />
-        <PullQuoteSection />
         <MakerSection     company={company} />
         <ContactSection   company={company} />
 

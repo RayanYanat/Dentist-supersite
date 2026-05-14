@@ -41,10 +41,10 @@ type Macro = {
 
 const MACROS: Macro[] = [
   {
-    src:     "photo-1664530838183-571e4f46040a",
+    src:     "photo-1776406987595-ba14f3510c07",
     pos:     "center 50%",
-    label:   "Implements",
-    caption: "In hand, ready",
+    label:   "Prosthesis",
+    caption: "Hand-finished",
   },
   {
     src:     "photo-1606811918854-2bd64043db61",
