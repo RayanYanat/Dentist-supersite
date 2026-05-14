@@ -65,10 +65,10 @@ const MACROS: Macro[] = [
     caption: "Ceramic · post-glaze",
   },
   {
-    src:     "photo-1673728795377-054e7fad7db1",
-    pos:     "center 50%",
-    label:   "Instrument set",
-    caption: "Sterile · staged",
+    src:     "photo-1606811971618-4486d14f3f99",
+    pos:     "center 45%",
+    label:   "Procedure",
+    caption: "In session",
   },
 ];
 
