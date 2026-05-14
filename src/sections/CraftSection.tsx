@@ -19,11 +19,77 @@ import type { CompanyData } from "@/lib/types";
  * section still feels alive between two heavy moments.
  */
 
-const DISCIPLINES = [
-  { num: "01", name: "Porcelain Veneers",   tag: "Lithium disilicate &middot; Hand-layered"  },
-  { num: "02", name: "Smile Design",        tag: "3D mock-up &middot; Try-in phase"          },
-  { num: "03", name: "Dental Implants",     tag: "Titanium &middot; Same-day options"        },
-  { num: "04", name: "Cosmetic Bonding",    tag: "Single-visit &middot; Reversible"          },
+/* Each discipline has a custom line-art SVG icon — small, mono gold,
+ * inline so it ships with the HTML (no extra request). The icons are
+ * deliberately abstract so they read as "dental design system" rather
+ * than literal photography. They sit before the italic name and ride
+ * the same translateX hover as the name. */
+type DisciplineIcon = (props: { className?: string }) => React.JSX.Element;
+
+const VeneerIcon: DisciplineIcon = ({ className }) => (
+  <svg viewBox="0 0 32 32" className={className} fill="none"
+    stroke="#C9A048" strokeWidth="0.9" strokeLinecap="round" strokeLinejoin="round">
+    {/* Stylised tooth — single front incisor */}
+    <path d="M11 9 C 11 7, 13 6, 16 6 C 19 6, 21 7, 21 9 L 21 19 C 21 23, 19 25, 17 25 C 15.5 25, 15 23.5, 15 22 C 15 23.5, 14.5 25, 13 25 C 11 25, 9 23, 9 19 Z" />
+    {/* Veneer shimmer — top edge highlight */}
+    <path d="M12.5 8.5 L 14 11" opacity="0.7" />
+    <path d="M19.5 8.5 L 18 11" opacity="0.7" />
+  </svg>
+);
+
+const SmileDesignIcon: DisciplineIcon = ({ className }) => (
+  <svg viewBox="0 0 32 32" className={className} fill="none"
+    stroke="#C9A048" strokeWidth="0.9" strokeLinecap="round" strokeLinejoin="round">
+    {/* Smile arc */}
+    <path d="M5 16 Q 16 25, 27 16" />
+    {/* Tooth markers above smile line */}
+    <path d="M9.5 14 L 9.5 16.6" />
+    <path d="M13 12.4 L 13 16.9" />
+    <path d="M16 11.6 L 16 17" />
+    <path d="M19 12.4 L 19 16.9" />
+    <path d="M22.5 14 L 22.5 16.6" />
+    {/* Measurement bracket above */}
+    <path d="M5 8 L 5 6 L 27 6 L 27 8" opacity="0.5" />
+  </svg>
+);
+
+const ImplantIcon: DisciplineIcon = ({ className }) => (
+  <svg viewBox="0 0 32 32" className={className} fill="none"
+    stroke="#C9A048" strokeWidth="0.9" strokeLinecap="round" strokeLinejoin="round">
+    {/* Crown on top */}
+    <path d="M11 4 C 11 3, 13 2.5, 16 2.5 C 19 2.5, 21 3, 21 4 L 20 9 L 12 9 Z" />
+    {/* Abutment */}
+    <path d="M13.5 9 L 13.5 11 L 18.5 11 L 18.5 9" />
+    {/* Implant body */}
+    <path d="M13 12 L 13 27" />
+    <path d="M19 12 L 19 27" />
+    {/* Threads — horizontal ticks */}
+    <path d="M13 15 L 19 15" opacity="0.6" />
+    <path d="M13 18 L 19 18" opacity="0.6" />
+    <path d="M13 21 L 19 21" opacity="0.6" />
+    <path d="M13 24 L 19 24" opacity="0.6" />
+  </svg>
+);
+
+const BondingIcon: DisciplineIcon = ({ className }) => (
+  <svg viewBox="0 0 32 32" className={className} fill="none"
+    stroke="#C9A048" strokeWidth="0.9" strokeLinecap="round" strokeLinejoin="round">
+    {/* Half-tooth profile */}
+    <path d="M10 9 C 10 7, 11.5 6, 13 6 L 13 24 C 13 25.5, 11.5 26, 10 26 C 8 26, 7 24, 7 20 Z" />
+    {/* Applicator stick from upper-right */}
+    <path d="M16 14 L 25 6" />
+    {/* Applicator tip — small circle + reservoir */}
+    <circle cx="24.5" cy="6.2" r="1.4" />
+    {/* Bonding drop forming */}
+    <path d="M15 15.5 L 17 13.5" opacity="0.6" />
+  </svg>
+);
+
+const DISCIPLINES: { num: string; name: string; tag: string; Icon: DisciplineIcon }[] = [
+  { num: "01", name: "Porcelain Veneers", tag: "Lithium disilicate &middot; Hand-layered", Icon: VeneerIcon },
+  { num: "02", name: "Smile Design",      tag: "3D mock-up &middot; Try-in phase",         Icon: SmileDesignIcon },
+  { num: "03", name: "Dental Implants",   tag: "Titanium &middot; Same-day options",       Icon: ImplantIcon },
+  { num: "04", name: "Cosmetic Bonding",  tag: "Single-visit &middot; Reversible",         Icon: BondingIcon },
 ];
 
 export default function CraftSection({ company }: { company: CompanyData }) {
@@ -212,24 +278,30 @@ export default function CraftSection({ company }: { company: CompanyData }) {
             {DISCIPLINES.map((d, i) => (
               <div key={d.name}>
                 <article
-                  className="m2-disc-row group grid grid-cols-12 items-baseline gap-3 lg:gap-6 py-5 lg:py-7 cursor-default"
+                  className="m2-disc-row group grid grid-cols-12 items-center gap-3 lg:gap-6 py-5 lg:py-7 cursor-default"
                   onMouseEnter={(e) => {
                     const root = e.currentTarget as HTMLElement;
                     const num  = root.querySelector(".disc-num")  as HTMLElement | null;
+                    const icon = root.querySelector(".disc-icon") as HTMLElement | null;
                     const name = root.querySelector(".disc-name") as HTMLElement | null;
                     const tag  = root.querySelector(".disc-tag")  as HTMLElement | null;
-                    if (num)  num.style.color     = "#D9B25C";
-                    if (name) name.style.transform = "translateX(8px)";
-                    if (tag)  tag.style.color     = "#D9B25C";
+                    if (num)  num.style.color      = "#D9B25C";
+                    if (icon) icon.style.transform  = "translateX(4px)";
+                    if (icon) icon.style.opacity    = "1";
+                    if (name) name.style.transform  = "translateX(10px)";
+                    if (tag)  tag.style.color      = "#D9B25C";
                   }}
                   onMouseLeave={(e) => {
                     const root = e.currentTarget as HTMLElement;
                     const num  = root.querySelector(".disc-num")  as HTMLElement | null;
+                    const icon = root.querySelector(".disc-icon") as HTMLElement | null;
                     const name = root.querySelector(".disc-name") as HTMLElement | null;
                     const tag  = root.querySelector(".disc-tag")  as HTMLElement | null;
-                    if (num)  num.style.color     = "rgba(201,160,72,0.55)";
-                    if (name) name.style.transform = "translateX(0px)";
-                    if (tag)  tag.style.color     = "rgba(201,160,72,0.65)";
+                    if (num)  num.style.color      = "rgba(201,160,72,0.55)";
+                    if (icon) icon.style.transform  = "translateX(0px)";
+                    if (icon) icon.style.opacity    = "0.7";
+                    if (name) name.style.transform  = "translateX(0px)";
+                    if (tag)  tag.style.color      = "rgba(201,160,72,0.65)";
                   }}
                 >
                   <span
@@ -242,7 +314,17 @@ export default function CraftSection({ company }: { company: CompanyData }) {
                     {d.num}.
                   </span>
                   <span
-                    className="disc-name col-span-10 lg:col-span-7 font-display italic"
+                    className="disc-icon hidden sm:flex sm:col-span-1 items-center justify-center"
+                    style={{
+                      opacity:    0.7,
+                      transition: "transform 350ms cubic-bezier(0.22, 1, 0.36, 1), opacity 300ms ease",
+                    }}
+                    aria-hidden="true"
+                  >
+                    <d.Icon className="w-7 h-7 lg:w-8 lg:h-8" />
+                  </span>
+                  <span
+                    className="disc-name col-span-10 sm:col-span-9 lg:col-span-6 font-display italic"
                     style={{
                       fontSize:      "clamp(1.8rem, 4.6vw, 3.6rem)",
                       lineHeight:    1,

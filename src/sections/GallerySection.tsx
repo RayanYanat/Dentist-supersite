@@ -212,7 +212,7 @@ export default function GallerySection({ company }: { company: CompanyData }) {
               className="font-data text-[10px] tracking-[0.45em] uppercase"
               style={{ color: "rgba(240,234,224,0.7)" }}
             >
-              II &mdash; The Ledger
+              III &mdash; The Ledger
             </span>
           </div>
 

@@ -3,6 +3,7 @@ import { useRef } from "react";
 import Image from "next/image";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
+import ScrollTrigger from "gsap/ScrollTrigger";
 import { Phone, ArrowRight } from "lucide-react";
 import type { CompanyData } from "@/lib/types";
 
@@ -144,6 +145,38 @@ export default function HeroSection({ company }: { company: CompanyData }) {
         { opacity: 1, y: 0, duration: 0.5 },
         5.1
       );
+
+      /* ── Parallax + breathe — premium production cues ───────────────
+       * After the intro timeline settles, the hero photo gets:
+       *   1. A slow scroll-tied parallax (the photo drifts down ~14% as
+       *      the user scrolls past the section). Cheap perceived-quality
+       *      win — Apple, Hermès, IWC all do this on hero shots.
+       *   2. An infinite breathe scale (1.0 → 1.012 → 1.0 every 8s),
+       *      timed asymmetrically (3s in / 5s out) for an organic feel.
+       *
+       * Both target a dedicated wrapper inside .s1-photo so the intro
+       * timeline's scale/filter animation isn't clobbered. */
+      gsap.registerPlugin(ScrollTrigger);
+
+      gsap.to(".s1-photo-inner", {
+        yPercent: 14,
+        ease:     "none",
+        scrollTrigger: {
+          trigger: sectionRef.current,
+          start:   "top top",
+          end:     "bottom top",
+          scrub:   0.4,
+        },
+      });
+
+      gsap.to(".s1-photo-inner", {
+        scale:    1.012,
+        duration: 3.0,
+        ease:     "sine.inOut",
+        repeat:   -1,
+        yoyo:     true,
+        yoyoEase: "sine.inOut",
+      });
     },
     { scope: sectionRef }
   );
@@ -162,15 +195,22 @@ export default function HeroSection({ company }: { company: CompanyData }) {
          * undermine the atelier register; the smile here is the category
          * cue without sacrificing the editorial frame. */}
         <div className="s1-photo absolute inset-0 z-[1] will-change-transform">
-          <Image
-            src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=2400&q=90"
-            alt=""
-            fill
-            sizes="100vw"
-            priority
-            className="object-cover"
-            style={{ objectPosition: "center 28%" }}
-          />
+          {/* Inner wrapper hosts the parallax (yPercent on scroll) + the
+              infinite breathe (scale yoyo). The outer .s1-photo handles
+              the intro timeline's scale 1.18 → 1.0 + filter warm-up.
+              Keeping these on separate transform layers prevents GSAP's
+              tweens from clobbering each other. */}
+          <div className="s1-photo-inner absolute inset-0 will-change-transform">
+            <Image
+              src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=2400&q=90"
+              alt=""
+              fill
+              sizes="100vw"
+              priority
+              className="object-cover"
+              style={{ objectPosition: "center 28%" }}
+            />
+          </div>
         </div>
 
         {/* ── z-2 — Atmospheric darkening (lifts during Beat 2) ─────────── */}
