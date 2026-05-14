@@ -112,7 +112,7 @@ export default function MakerSection({ company }: { company: CompanyData }) {
   return (
     <section
       ref={sectionRef}
-      id="maker"
+      id="team"
       className="relative section-padding overflow-hidden"
       style={{ backgroundColor: "#0C0B09" }}
     >
@@ -154,7 +154,7 @@ export default function MakerSection({ company }: { company: CompanyData }) {
             className="font-data text-[10px] tracking-[0.45em] uppercase"
             style={{ color: "rgba(240,234,224,0.7)" }}
           >
-            III &mdash; The Maker
+            III &mdash; The Team
           </span>
         </div>
 
@@ -176,12 +176,12 @@ export default function MakerSection({ company }: { company: CompanyData }) {
                 }}
               >
                 <Image
-                  src="https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&w=1600&q=90"
+                  src="https://images.unsplash.com/photo-1771442873035-474765b40ac6?auto=format&fit=crop&w=1600&q=90"
                   alt=""
                   fill
                   sizes="(min-width: 1024px) 40vw, 100vw"
                   className="object-cover"
-                  style={{ objectPosition: "center 15%" }}
+                  style={{ objectPosition: "center 50%" }}
                 />
               </div>
 
@@ -216,7 +216,7 @@ export default function MakerSection({ company }: { company: CompanyData }) {
                 className="font-data text-[9px] tracking-[0.32em] uppercase"
                 style={{ color: "rgba(216,210,200,0.4)" }}
               >
-                Portrait &middot; in studio
+                Composition &middot; in hand
               </span>
             </div>
           </div>
@@ -233,7 +233,7 @@ export default function MakerSection({ company }: { company: CompanyData }) {
               className="mk-eyebrow font-data text-[11px] tracking-[0.42em] uppercase block mb-6"
               style={{ color: "rgba(201,160,72,0.75)" }}
             >
-              The hand
+              The team
             </span>
 
             <h2
@@ -255,10 +255,10 @@ export default function MakerSection({ company }: { company: CompanyData }) {
               style={{ color: "rgba(216,210,200,0.7)" }}
             >
               A single principle&nbsp;: the same hand sees you from consultation through placement.
-              {" "}Cases at {company.name} are not passed between chairs &mdash; each chart carries
-              the signature of the practitioner who owns it, from photograph to polish.
-              Veneers, smile design, implants &mdash; composed for one patient at a time.
-              Never rushed. Never sub-contracted to an off-site lab.
+              {" "}Cases at {company.name}{" "}are not passed between chairs &mdash; each chart
+              carries the signature of the practitioner who owns it, from photograph to polish.
+              {" "}Veneers, smile design, implants &mdash; composed for one patient at a time.
+              {" "}Never rushed. Never sub-contracted to an off-site lab.
             </p>
 
             {/* Hairline divider before the signature */}

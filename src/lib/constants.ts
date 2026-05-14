@@ -7,7 +7,7 @@
 export const NAV_LINKS = [
   { label: "The Crafts",      href: "#craft"   },
   { label: "The Ledger",      href: "#ledger"  },
-  { label: "The Maker",       href: "#maker"   },
+  { label: "The Team",        href: "#team"    },
   { label: "Contact",         href: "#contact" },
 ];
 
