@@ -159,17 +159,25 @@ export default function CraftSection({ company }: { company: CompanyData }) {
       const mm = gsap.matchMedia();
 
       mm.add("(min-width: 1024px)", () => {
-        /* Set initial state: only first discipline visible */
+        /* Initial state: only first discipline visible */
         panelRefs.current.forEach((panel, i) => {
           if (!panel) return;
           gsap.set(panel, { opacity: i === 0 ? 1 : 0, zIndex: i === 0 ? 2 : 1 });
         });
 
-        /* The whole pin area scrolls for (N - 1) viewport heights so
-           each discipline (except the first) gets a viewport to itself
-           to be triggered into. */
-        const pinDuration = (DISCIPLINES.length - 1) * 100; // 300% for 4 disciplines
+        /* Pin duration: one viewport per "gap" between disciplines.
+           For 4 disciplines we need 3 transitions = 300% of scroll. */
+        const pinDuration = (DISCIPLINES.length - 1) * 100; // 300%
 
+        /* Single pin trigger with onUpdate-based discipline switching.
+           Earlier attempt used separate ScrollTriggers per transition
+           with `top+=X% top` positions — but during a pin those Xs are
+           computed against the trigger's natural 100vh height, not the
+           pin's extended scroll range, so all switches fired bunched
+           up in the first 100vh and the rest of the pin showed nothing
+           but discipline 04 (the last switchTo). One trigger + onUpdate
+           mapping progress → index avoids the entire class of bug. */
+        let lastIdx = 0;
         ScrollTrigger.create({
           trigger:       pinWrapperRef.current,
           start:         "top top",
@@ -177,26 +185,22 @@ export default function CraftSection({ company }: { company: CompanyData }) {
           pin:           true,
           pinType:       "fixed",
           anticipatePin: 1,
-          scrub:         false,
-        });
-
-        /* Discrete switch triggers — one per discipline transition.
-           When scrolling into discipline i's "lane", the previous panel
-           fades out and the new one fades in + animates its content. */
-        DISCIPLINES.forEach((_, i) => {
-          if (i === 0) return; // first one is initial state
-
-          ScrollTrigger.create({
-            trigger: pinWrapperRef.current,
-            start:   `top+=${(i / (DISCIPLINES.length - 1)) * 100 - 25}% top`,
-            end:     `top+=${(i / (DISCIPLINES.length - 1)) * 100 + 25}% top`,
-            onEnter:     () => switchTo(i),
-            onEnterBack: () => switchTo(i - 1),
-          });
+          onUpdate: (self) => {
+            /* Map scroll progress (0..1) to discipline index (0..N-1).
+               floor(progress * N) gives 0,1,2,3 with clamp on the
+               last frame. */
+            const newIdx = Math.min(
+              DISCIPLINES.length - 1,
+              Math.floor(self.progress * DISCIPLINES.length),
+            );
+            if (newIdx !== lastIdx) {
+              switchTo(newIdx);
+              lastIdx = newIdx;
+            }
+          },
         });
 
         return () => {
-          /* matchMedia cleanup — runs when the breakpoint no longer matches */
           panelRefs.current.forEach((panel) => {
             if (panel) gsap.set(panel, { clearProps: "all" });
           });
