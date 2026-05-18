@@ -154,7 +154,7 @@ export default function MakerSection({ company }: { company: CompanyData }) {
             className="font-data text-[10px] tracking-[0.45em] uppercase"
             style={{ color: "rgba(240,234,224,0.7)" }}
           >
-            IV &mdash; The Team
+            III &mdash; The Team
           </span>
         </div>
 
@@ -176,7 +176,7 @@ export default function MakerSection({ company }: { company: CompanyData }) {
                 }}
               >
                 <Image
-                  src="https://images.unsplash.com/photo-1771442873035-474765b40ac6?auto=format&fit=crop&w=1600&q=90"
+                  src="https://images.unsplash.com/photo-1695986061759-bcf4ca33d0c4?auto=format&fit=crop&w=1600&q=90"
                   alt=""
                   fill
                   sizes="(min-width: 1024px) 40vw, 100vw"
