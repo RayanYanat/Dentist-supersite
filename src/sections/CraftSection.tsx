@@ -165,18 +165,14 @@ export default function CraftSection({ company }: { company: CompanyData }) {
           gsap.set(panel, { opacity: i === 0 ? 1 : 0, zIndex: i === 0 ? 2 : 1 });
         });
 
-        /* Pin duration: one viewport per "gap" between disciplines.
-           For 4 disciplines we need 3 transitions = 300% of scroll. */
-        const pinDuration = (DISCIPLINES.length - 1) * 100; // 300%
+        /* Pin duration — deliberately long so each discipline gets
+           enough scroll room that a single wheel event can't blast
+           through multiple disciplines. Combined with `snap` below,
+           every wheel impulse lands cleanly on the next discipline
+           instead of skipping over two or three.
+           150% per gap × 3 gaps = 450% total pin scroll. */
+        const pinDuration = (DISCIPLINES.length - 1) * 150; // 450%
 
-        /* Single pin trigger with onUpdate-based discipline switching.
-           Earlier attempt used separate ScrollTriggers per transition
-           with `top+=X% top` positions — but during a pin those Xs are
-           computed against the trigger's natural 100vh height, not the
-           pin's extended scroll range, so all switches fired bunched
-           up in the first 100vh and the rest of the pin showed nothing
-           but discipline 04 (the last switchTo). One trigger + onUpdate
-           mapping progress → index avoids the entire class of bug. */
         let lastIdx = 0;
         ScrollTrigger.create({
           trigger:       pinWrapperRef.current,
@@ -185,10 +181,25 @@ export default function CraftSection({ company }: { company: CompanyData }) {
           pin:           true,
           pinType:       "fixed",
           anticipatePin: 1,
+          /* Snap to each discipline.
+             - snapTo:    1 / (N-1) → snap points at 0, 1/3, 2/3, 1
+             - directional: snap in the direction of the scroll only
+               (so a wheel-down snaps to the next discipline, not back
+                to the one you just left)
+             - duration:  short snap animation (0.4–0.7s)
+             - delay:     short wait after scroll stops before snap
+               fires (lets the user feel the inertia briefly then
+               settle on a discipline)
+             Together these make the section feel like a slide deck:
+             one wheel → one discipline advance, no overshoot, no skip. */
+          snap: {
+            snapTo:     1 / (DISCIPLINES.length - 1),
+            duration:   { min: 0.4, max: 0.7 },
+            ease:       "power2.inOut",
+            delay:      0.08,
+            directional: true,
+          },
           onUpdate: (self) => {
-            /* Map scroll progress (0..1) to discipline index (0..N-1).
-               floor(progress * N) gives 0,1,2,3 with clamp on the
-               last frame. */
             const newIdx = Math.min(
               DISCIPLINES.length - 1,
               Math.floor(self.progress * DISCIPLINES.length),
