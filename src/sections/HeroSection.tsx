@@ -10,45 +10,62 @@ import type { CompanyData } from "@/lib/types";
 /**
  * Hero — Scene I "The Opening"
  *
- * Auto-playing cinematic intro on page load (~5.5 seconds). The visitor
- * doesn't have to do anything — the page reveals itself like a film
- * opening sequence. After the intro settles, the hero is "alive" with
- * subtle ambient effects, and the visitor is invited to scroll.
+ * Auto-playing cinematic intro on page load (~4.5 seconds). Compressed
+ * from an earlier 5.5s version — for cold-outreach prospects with 30s
+ * attention spans, 5.5s of intro before they can interact was burning
+ * 18% of their available time on chrome. The cinematic feel survives.
  *
  * Three beats, all played automatically via a single GSAP timeline:
  *
- *   BEAT 1  (0.0–2.0 s)  — The whisper
+ *   BEAT 1  (0.0–1.9 s)  — The whisper
  *     Black canvas. "We don't whiten teeth." fades up in italic, holds,
  *     fades out and is replaced by "We redesign faces." in gold.
  *
- *   BEAT 2  (2.0–4.0 s)  — The curtain
+ *   BEAT 2  (1.9–3.0 s)  — The curtain
  *     Two solid slabs (top half + bottom half of the viewport) slide
  *     apart from the center — top up, bottom down — like elevator doors
  *     opening on a face. Photo scale settles (1.18 → 1.0); atmospheric
  *     darkening lifts.
  *
- *   BEAT 3  (4.0–5.5 s)  — The composition
- *     "L'Art du Sourire" masthead appears bottom-left over the now-
- *     revealed portrait. Subtitle + CTAs slide in. Scroll cue invites
- *     the visitor into Scene II.
+ *   BEAT 3  (3.0–4.5 s)  — The composition
+ *     "Smile, Composed." masthead appears bottom-left, char by char
+ *     with a blur-up reveal. Subtitle + CTAs slide in. Scroll cue
+ *     invites the visitor into the next scene.
+ *
+ * The "Begin Consultation" CTA is magnetic on pointer:fine devices —
+ * it attracts the cursor in a 120px radius. Premium signal used by
+ * Stripe / Linear / Apple; mobile gets a static button.
  *
  * Why auto-play instead of scrub-on-scroll: forcing the user to scroll
  * to "activate" the page is counter-intuitive — a first-time visitor
- * expects the hero to be complete on arrival. Scroll-driven storytelling
- * is reserved for SUBSEQUENT scenes (Scene II horizontal panels, Scene
- * III before/after scrub) where the user has already been onboarded
- * and understands they're inside a directed experience.
+ * expects the hero to be complete on arrival.
  */
 
+/** Wraps each character of a string in an inline-block span so GSAP
+ *  can stagger them. Spaces become non-breaking spaces so the layout
+ *  stays stable while characters animate their y/blur transforms. */
+function renderChars(text: string): React.JSX.Element[] {
+  return text.split("").map((c, i) => (
+    <span
+      key={i}
+      className="s1-char"
+      style={{ display: "inline-block", whiteSpace: "pre" }}
+    >
+      {c === " " ? " " : c}
+    </span>
+  ));
+}
+
 export default function HeroSection({ company }: { company: CompanyData }) {
-  const sectionRef = useRef<HTMLElement>(null);
+  const sectionRef     = useRef<HTMLElement>(null);
+  const magneticBtnRef = useRef<HTMLAnchorElement>(null);
 
   useGSAP(
     () => {
       const section = sectionRef.current;
       if (!section) return;
 
-      /* ── Master timeline — auto-plays on mount, ~5.5s total ────────────
+      /* ── Master timeline — auto-plays on mount, ~4.5s total ────────────
        * useGSAP runs as useLayoutEffect → fires synchronously after DOM
        * commit, before first paint. FOUC prevention is handled by the
        * .s1-* classes in globals.css setting opacity:0 / transforms.
@@ -59,92 +76,142 @@ export default function HeroSection({ company }: { company: CompanyData }) {
       /* Persistent UI surfaces immediately */
       tl.to([".s1-meta", ".s1-rail"], { opacity: 1, duration: 0.5, stagger: 0.1 }, 0);
       /* Side rail fills during the entire intro — completion = "ready" */
-      tl.to(".s1-rail-grow", { scaleY: 1, duration: 5.0, ease: "none" }, 0.3);
+      tl.to(".s1-rail-grow", { scaleY: 1, duration: 4.2, ease: "none" }, 0.2);
 
       /* ── BEAT 1 — The whisper ───────────────────────────────────────── */
       tl.fromTo(
         ".s1-line-a",
         { opacity: 0, y: 60, filter: "blur(10px)" },
-        { opacity: 1, y: 0, filter: "blur(0px)", duration: 1.0, ease: "power3.out" },
-        0.3
+        { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.8, ease: "power3.out" },
+        0.1
       );
       tl.to(
         ".s1-line-a",
-        { opacity: 0, y: -50, filter: "blur(8px)", duration: 0.7, ease: "power2.in" },
-        1.6
+        { opacity: 0, y: -50, filter: "blur(8px)", duration: 0.5, ease: "power2.in" },
+        1.0
       );
 
       tl.fromTo(
         ".s1-line-b",
         { opacity: 0, y: 60, filter: "blur(10px)" },
-        { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.9, ease: "power3.out" },
-        1.9
+        { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.7, ease: "power3.out" },
+        1.2
       );
 
       /* ── BEAT 2 — The curtain rises ─────────────────────────────────── */
       /* Slabs slide apart, photo emerges from the center outward */
       tl.to(
         ".s1-veil-top",
-        { yPercent: -100, duration: 1.6, ease: "expo.inOut" },
-        2.6
+        { yPercent: -100, duration: 1.3, ease: "expo.inOut" },
+        1.9
       );
       tl.to(
         ".s1-veil-bottom",
-        { yPercent: 100, duration: 1.6, ease: "expo.inOut" },
-        2.6
+        { yPercent: 100, duration: 1.3, ease: "expo.inOut" },
+        1.9
       );
 
-      /* Photo subtle scale settles — camera pulling back */
+      /* Photo subtle scale settles — camera pulling back. Stronger
+         editorial colour grade on the final filter (was brightness 1.0
+         contrast 1.10 saturate 0.92 → now darker, higher contrast,
+         touch of sepia for warmth — reads more "cinema editorial"
+         than "iPhone portrait"). */
       tl.fromTo(
         ".s1-photo",
         { scale: 1.18, filter: "brightness(0.65) contrast(1.18) saturate(0.75)" },
-        { scale: 1.00, filter: "brightness(1.00) contrast(1.10) saturate(0.92)", duration: 2.2, ease: "power2.out" },
-        2.6
+        { scale: 1.00, filter: "brightness(0.94) contrast(1.16) saturate(0.78) sepia(0.06)", duration: 1.8, ease: "power2.out" },
+        1.9
       );
 
       /* Atmospheric darkening lifts as the reveal progresses */
       tl.fromTo(
         ".s1-atmosphere",
         { opacity: 0.55 },
-        { opacity: 0,    duration: 1.8, ease: "power2.out" },
-        2.8
+        { opacity: 0,    duration: 1.5, ease: "power2.out" },
+        2.1
       );
 
       /* Line 2 fades while the photo emerges underneath */
       tl.to(
         ".s1-line-b",
-        { opacity: 0, y: -40, filter: "blur(6px)", duration: 0.8, ease: "power2.in" },
-        3.0
+        { opacity: 0, y: -40, filter: "blur(6px)", duration: 0.7, ease: "power2.in" },
+        2.2
       );
 
-      /* ── BEAT 3 — The composition settles ───────────────────────────── */
-      tl.fromTo(
+      /* ── BEAT 3 — The composition settles ─────────────────────────────
+       * The masthead reveals char-by-char with a blur-up. Each character
+       * is wrapped in a .s1-char span (see JSX below). The container
+       * fades to opacity 1 first; then the chars stagger in. */
+      tl.to(
         ".s1-masthead",
-        { opacity: 0, y: 50 },
-        { opacity: 1, y: 0, duration: 1.0, ease: "power3.out" },
-        4.1
+        { opacity: 1, duration: 0.1 },
+        2.9
+      );
+      tl.fromTo(
+        ".s1-masthead .s1-char",
+        { opacity: 0, y: 28, filter: "blur(8px)" },
+        { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.55, stagger: 0.038, ease: "power3.out" },
+        2.95
       );
 
       tl.fromTo(
         ".s1-sub",
         { opacity: 0, y: 25 },
-        { opacity: 1, y: 0, duration: 0.7, ease: "power2.out" },
-        4.5
+        { opacity: 1, y: 0, duration: 0.6, ease: "power2.out" },
+        3.5
       );
 
       tl.fromTo(
         ".s1-cta",
         { opacity: 0, y: 25 },
-        { opacity: 1, y: 0, duration: 0.6, stagger: 0.12, ease: "power2.out" },
-        4.8
+        { opacity: 1, y: 0, duration: 0.55, stagger: 0.12, ease: "power2.out" },
+        3.75
       );
 
       tl.fromTo(
         ".s1-cue",
         { opacity: 0, y: 12 },
         { opacity: 1, y: 0, duration: 0.5 },
-        5.1
+        4.0
       );
+
+      /* ── Magnetic CTA on "Begin Consultation" ──────────────────────
+       * Desktop-only via matchMedia(pointer: fine). The button is pulled
+       * toward the cursor in a 120px radius. quickTo gives a smoother
+       * animation than gsap.to() inside a high-frequency mousemove
+       * handler — it reuses the same tween instance and just updates
+       * the target value. */
+      const mm = gsap.matchMedia();
+      mm.add("(pointer: fine)", () => {
+        const btn = magneticBtnRef.current;
+        if (!btn) return;
+
+        const RADIUS   = 120;
+        const STRENGTH = 0.35;
+        const xTo = gsap.quickTo(btn, "x", { duration: 0.4, ease: "power2.out" });
+        const yTo = gsap.quickTo(btn, "y", { duration: 0.4, ease: "power2.out" });
+
+        const onMove = (e: MouseEvent) => {
+          const rect = btn.getBoundingClientRect();
+          const cx   = rect.left + rect.width  / 2;
+          const cy   = rect.top  + rect.height / 2;
+          const dx   = e.clientX - cx;
+          const dy   = e.clientY - cy;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+
+          if (dist < RADIUS) {
+            const factor = (1 - dist / RADIUS) * STRENGTH;
+            xTo(dx * factor);
+            yTo(dy * factor);
+          } else {
+            xTo(0);
+            yTo(0);
+          }
+        };
+
+        document.addEventListener("mousemove", onMove, { passive: true });
+        return () => document.removeEventListener("mousemove", onMove);
+      });
 
       /* ── Parallax + breathe — premium production cues ───────────────
        * After the intro timeline settles, the hero photo gets:
@@ -275,22 +342,29 @@ export default function HeroSection({ company }: { company: CompanyData }) {
                 textShadow:    "0 2px 40px rgba(0,0,0,0.5)",
               }}
             >
-              <span style={{ fontStyle: "italic", color: "#C9A048" }}>L&rsquo;Art</span>{" "}
-              du Sourire.
+              {/* Each character wrapped so the intro timeline can blur-up
+                  stagger them one by one. Spaces use &nbsp; so they keep
+                  their width during the y/blur animation. */}
+              {renderChars("Smile,")}
+              <span className="s1-char" style={{ display: "inline-block" }}>{" "}</span>
+              <span style={{ fontStyle: "italic", color: "#C9A048" }}>
+                {renderChars("Composed.")}
+              </span>
             </h1>
 
             <p
               className="s1-sub mt-6 max-w-md text-base leading-relaxed"
               style={{ color: "rgba(240,234,224,0.78)", textShadow: "0 1px 20px rgba(0,0,0,0.6)" }}
             >
-              Hand-sculpted veneers, designed in-house, signed by the master.
-              No outsourced labs, no rotating clinicians.
+              Hand-sculpted veneers, designed in-house, finished by the practitioner
+              who owns your case. No outsourced labs, no rotating chairs.
             </p>
 
             <div className="s1-cta mt-8 flex flex-col sm:flex-row flex-wrap gap-4 pointer-events-auto">
               <a
+                ref={magneticBtnRef}
                 href="#contact"
-                className="group relative flex items-center gap-3 px-8 py-4 text-xs font-bold tracking-[0.22em] uppercase overflow-hidden transition-all duration-300"
+                className="group relative flex items-center gap-3 px-8 py-4 text-xs font-bold tracking-[0.22em] uppercase overflow-hidden transition-colors duration-300 will-change-transform"
                 style={{ backgroundColor: "#C9A048", color: "#0C0B09" }}
                 onMouseEnter={(e) => {
                   (e.currentTarget as HTMLElement).style.backgroundColor = "#D9B25C";
