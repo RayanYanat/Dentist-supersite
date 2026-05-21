@@ -111,17 +111,35 @@ export default function HeroSection({ company }: { company: CompanyData }) {
         1.9
       );
 
-      /* Photo subtle scale settles — camera pulling back. Stronger
-         editorial colour grade on the final filter (was brightness 1.0
-         contrast 1.10 saturate 0.92 → now darker, higher contrast,
-         touch of sepia for warmth — reads more "cinema editorial"
-         than "iPhone portrait"). */
-      tl.fromTo(
-        ".s1-photo",
-        { scale: 1.18, filter: "brightness(0.65) contrast(1.18) saturate(0.75)" },
-        { scale: 1.00, filter: "brightness(0.94) contrast(1.16) saturate(0.78) sepia(0.06)", duration: 1.8, ease: "power2.out" },
-        1.9
-      );
+      /* Photo settles as the curtain reveals it. Stronger editorial
+         colour grade on the final filter (darker, higher contrast,
+         touch of sepia — reads more "cinema editorial" than "iPhone
+         portrait").
+
+         Scale animation (1.18 → 1.00 zoom-out) is desktop-only. On
+         mobile the user reported the combination of the scale tween
+         + iOS native scroll + compositor with will-change-transform
+         caused visible jitter when they started scrolling during
+         the intro. Mobile gets the filter colour-warm-up only — same
+         narrative beat, no scale, no jank. */
+      const isDesktop = typeof window !== "undefined" &&
+                        window.matchMedia("(min-width: 1024px)").matches;
+
+      if (isDesktop) {
+        tl.fromTo(
+          ".s1-photo",
+          { scale: 1.18, filter: "brightness(0.65) contrast(1.18) saturate(0.75)" },
+          { scale: 1.00, filter: "brightness(0.94) contrast(1.16) saturate(0.78) sepia(0.06)", duration: 1.8, ease: "power2.out" },
+          1.9
+        );
+      } else {
+        tl.fromTo(
+          ".s1-photo",
+          { filter: "brightness(0.65) contrast(1.18) saturate(0.75)" },
+          { filter: "brightness(0.94) contrast(1.16) saturate(0.78) sepia(0.06)", duration: 1.6, ease: "power2.out" },
+          1.9
+        );
+      }
 
       /* Atmospheric darkening lifts as the reveal progresses */
       tl.fromTo(
@@ -272,13 +290,18 @@ export default function HeroSection({ company }: { company: CompanyData }) {
          * dental closeups (teeth, x-rays, tools) read as "clinic" and
          * undermine the atelier register; the smile here is the category
          * cue without sacrificing the editorial frame. */}
-        <div className="s1-photo absolute inset-0 z-[1] will-change-transform">
+        {/* will-change-transform gated to lg+. On mobile there's no
+            transform on this layer (scale + parallax + breathe are all
+            desktop-only) so promoting it to its own compositor layer
+            is wasted memory and a documented source of iOS Safari
+            scroll jank. */}
+        <div className="s1-photo absolute inset-0 z-[1] lg:will-change-transform">
           {/* Inner wrapper hosts the parallax (yPercent on scroll) + the
-              infinite breathe (scale yoyo). The outer .s1-photo handles
-              the intro timeline's scale 1.18 → 1.0 + filter warm-up.
-              Keeping these on separate transform layers prevents GSAP's
-              tweens from clobbering each other. */}
-          <div className="s1-photo-inner absolute inset-0 will-change-transform">
+              infinite breathe (scale yoyo) — both desktop-only. Outer
+              .s1-photo handles the intro filter warm-up (+ scale on
+              desktop). Separate transform layers prevent GSAP tweens
+              from clobbering each other. */}
+          <div className="s1-photo-inner absolute inset-0 lg:will-change-transform">
             <Image
               src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=2400&q=90"
               alt=""
