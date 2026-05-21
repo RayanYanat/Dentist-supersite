@@ -9,7 +9,41 @@ import { getSupabase, getSupabaseAdmin } from "@/lib/supabase";
  * Slack notification — every time a prospect actually opens their page.
  * The Slack fetch is awaited (NOT fire-and-forget) because Netlify kills
  * pending async work the moment the response is returned.
+ *
+ * The Slack payload includes the visitor's city via the Netlify-injected
+ * `x-nf-geo` header (base64 JSON with city/region/country). This lets the
+ * outreach operator distinguish their own test visits from prospect
+ * visits at a glance — if the city matches the lead's city, it's flagged
+ * with a "✅ Match cabinet" badge.
  */
+
+/** Parses the Netlify x-nf-geo header (base64-encoded JSON) into a
+ *  display string + the raw city for matching. Returns nulls if the
+ *  header is absent (local dev) or malformed. */
+function parseLocation(req: NextRequest): { display: string | null; city: string | null } {
+  const nfGeo = req.headers.get("x-nf-geo");
+  if (!nfGeo) return { display: null, city: null };
+
+  try {
+    const decoded = Buffer.from(nfGeo, "base64").toString("utf-8");
+    const geo     = JSON.parse(decoded) as {
+      city?:        string;
+      subdivision?: { name?: string; code?: string };
+      country?:     { name?: string; code?: string };
+    };
+    const parts = [
+      geo.city,
+      geo.subdivision?.name,
+      geo.country?.name,
+    ].filter(Boolean);
+    return {
+      display: parts.length > 0 ? parts.join(", ") : null,
+      city:    geo.city ?? null,
+    };
+  } catch {
+    return { display: null, city: null };
+  }
+}
 export async function POST(req: NextRequest) {
   try {
     const { slug } = await req.json() as { slug: string };
@@ -27,7 +61,7 @@ export async function POST(req: NextRequest) {
     /* ── Fetch current lead state ────────────────────────────────────── */
     const { data: lead } = await supabase
       .from("leads")
-      .select("name, visit_count, first_visited_at")
+      .select("name, city, visit_count, first_visited_at")
       .eq("slug", slug)
       .single();
 
@@ -62,6 +96,19 @@ export async function POST(req: NextRequest) {
         timeZone: "Europe/Paris",
       });
 
+      /* Location — pulled from the Netlify x-nf-geo header. If the
+         visitor's city matches the lead's city (case-insensitive),
+         flag it as likely-the-prospect so the operator can tell their
+         own test visits apart from genuine prospect opens at a glance. */
+      const { display: location, city: visitorCity } = parseLocation(req);
+      const leadCity   = lead.city ?? null;
+      const isCityMatch = !!(visitorCity && leadCity &&
+        visitorCity.toLowerCase().trim() === leadCity.toLowerCase().trim());
+      const locationLine =
+        location
+          ? `📍 ${location}${isCityMatch ? "  ·  ✅ Match cabinet" : ""}`
+          : "📍 Localisation inconnue";
+
       try {
         await fetch(slackUrl, {
           method:  "POST",
@@ -75,6 +122,7 @@ export async function POST(req: NextRequest) {
                   text: [
                     `${emoji} *${lead.name}* est sur son site`,
                     `🕐 ${time}  ·  ${visitLabel}  ·  ${device}`,
+                    locationLine,
                   ].join("\n"),
                 },
               },
