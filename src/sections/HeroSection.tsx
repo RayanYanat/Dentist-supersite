@@ -339,15 +339,24 @@ export default function HeroSection({ company }: { company: CompanyData }) {
                 letterSpacing: "-0.02em",
                 color:         "#F0EAE0",
                 fontWeight:    400,
-                textShadow:    "0 2px 40px rgba(0,0,0,0.5)",
+                /* Layered shadow: tight one for edge against the warm
+                   photo, wider halo for depth. Single soft shadow on a
+                   busy background reads muddy. */
+                textShadow:
+                  "0 0 1px rgba(0,0,0,0.95), " +
+                  "0 1px 3px rgba(0,0,0,0.9), " +
+                  "0 3px 22px rgba(0,0,0,0.75), " +
+                  "0 8px 60px rgba(0,0,0,0.55)",
               }}
             >
               {/* Each character wrapped so the intro timeline can blur-up
                   stagger them one by one. Spaces use &nbsp; so they keep
                   their width during the y/blur animation. */}
-              {renderChars("Smile,")}
-              <span className="s1-char" style={{ display: "inline-block" }}>{" "}</span>
-              <span style={{ fontStyle: "italic", color: "#C9A048" }}>
+              <span style={{ display: "inline-block", whiteSpace: "nowrap" }}>
+                {renderChars("Smile,")}
+              </span>
+              <span className="s1-char" style={{ display: "inline-block", width: "0.3em" }} />
+              <span style={{ display: "inline-block", whiteSpace: "nowrap", fontStyle: "italic", color: "#D9B25C" }}>
                 {renderChars("Composed.")}
               </span>
             </h1>
