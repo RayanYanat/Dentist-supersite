@@ -75,13 +75,23 @@ export default function Navbar({ company }: { company: CompanyData }) {
     menuLink:    isLight ? "rgba(26,22,18,0.6)"  : "rgba(216,210,200,0.55)",
   };
 
+  /* Tone tokens for the always-on top-of-page backdrop.
+     Before scroll triggers, the navbar used to be fully transparent
+     and its text floated directly over the hero photo (warm skin
+     tones → very low contrast). A 0.42 dark scrim + 8px blur gives
+     the navbar text a stable readable backdrop without occluding
+     the photo. When the user scrolls, this morphs smoothly into the
+     existing scrolled state (0.94 dark + 14px blur + gold hairline). */
+  const topBg   = isLight ? "rgba(247,244,238,0.55)" : "rgba(12,11,9,0.42)";
+  const topBlur = "blur(8px)";
+
   return (
     <header
       className="fixed top-0 left-0 right-0 z-50 transition-all duration-500"
       style={{
-        backgroundColor:      scrolled ? tone.headerBg : "transparent",
-        backdropFilter:       scrolled ? "blur(14px)" : "none",
-        WebkitBackdropFilter: scrolled ? "blur(14px)" : "none",
+        backgroundColor:      scrolled ? tone.headerBg : topBg,
+        backdropFilter:       scrolled ? "blur(14px)" : topBlur,
+        WebkitBackdropFilter: scrolled ? "blur(14px)" : topBlur,
         borderBottom:         scrolled ? `1px solid ${tone.border}` : "none",
       }}
     >
