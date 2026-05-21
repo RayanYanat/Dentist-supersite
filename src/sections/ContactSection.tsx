@@ -264,9 +264,9 @@ export default function ContactSection({ company }: { company: CompanyData }) {
           }}
         >
           {/* Corner brackets */}
-          <div className="absolute top-3 left-3 w-5 h-5 pointer-events-none"
+          <div className="hidden sm:block absolute top-3 left-3 w-5 h-5 pointer-events-none"
             style={{ borderTop: "1px solid rgba(201,160,72,0.4)", borderLeft: "1px solid rgba(201,160,72,0.4)" }} />
-          <div className="absolute bottom-3 right-3 w-5 h-5 pointer-events-none"
+          <div className="hidden sm:block absolute bottom-3 right-3 w-5 h-5 pointer-events-none"
             style={{ borderBottom: "1px solid rgba(201,160,72,0.4)", borderRight: "1px solid rgba(201,160,72,0.4)" }} />
 
           {!submitted ? (

@@ -214,35 +214,37 @@ export default function HeroSection({ company }: { company: CompanyData }) {
       });
 
       /* ── Parallax + breathe — premium production cues ───────────────
-       * After the intro timeline settles, the hero photo gets:
-       *   1. A slow scroll-tied parallax (the photo drifts down ~14% as
-       *      the user scrolls past the section). Cheap perceived-quality
-       *      win — Apple, Hermès, IWC all do this on hero shots.
-       *   2. An infinite breathe scale (1.0 → 1.012 → 1.0 every 8s),
-       *      timed asymmetrically (3s in / 5s out) for an organic feel.
-       *
-       * Both target a dedicated wrapper inside .s1-photo so the intro
-       * timeline's scale/filter animation isn't clobbered. */
+       * Both desktop-only via matchMedia. On mobile:
+       *   - Parallax compounds the iOS Safari URL-bar-collapse jump
+       *     (yPercent calculations get re-evaluated as the section
+       *     height changes mid-scroll → visible re-snap).
+       *   - The breathe (1.0 → 1.012 scale loop) is too subtle to
+       *     notice on a small screen but it still burns CPU/battery
+       *     on mobile devices.
+       * Gating both behind (min-width: 1024px) eliminates both costs
+       * with no perceptible loss of polish on phones. */
       gsap.registerPlugin(ScrollTrigger);
 
-      gsap.to(".s1-photo-inner", {
-        yPercent: 14,
-        ease:     "none",
-        scrollTrigger: {
-          trigger: sectionRef.current,
-          start:   "top top",
-          end:     "bottom top",
-          scrub:   0.4,
-        },
-      });
+      mm.add("(min-width: 1024px)", () => {
+        gsap.to(".s1-photo-inner", {
+          yPercent: 14,
+          ease:     "none",
+          scrollTrigger: {
+            trigger: sectionRef.current,
+            start:   "top top",
+            end:     "bottom top",
+            scrub:   0.4,
+          },
+        });
 
-      gsap.to(".s1-photo-inner", {
-        scale:    1.012,
-        duration: 3.0,
-        ease:     "sine.inOut",
-        repeat:   -1,
-        yoyo:     true,
-        yoyoEase: "sine.inOut",
+        gsap.to(".s1-photo-inner", {
+          scale:    1.012,
+          duration: 3.0,
+          ease:     "sine.inOut",
+          repeat:   -1,
+          yoyo:     true,
+          yoyoEase: "sine.inOut",
+        });
       });
     },
     { scope: sectionRef }
@@ -251,8 +253,17 @@ export default function HeroSection({ company }: { company: CompanyData }) {
   return (
     <section
       ref={sectionRef}
-      className="relative w-full h-screen overflow-hidden"
-      style={{ backgroundColor: "#0C0B09" }}
+      className="relative w-full overflow-hidden"
+      style={{
+        backgroundColor: "#0C0B09",
+        /* svh = small viewport height — stays stable on iOS Safari when
+           the URL bar collapses on scroll. Plain 100vh would cause the
+           whole hero to re-layout mid-scroll (the "jump" the user
+           reported on mobile). Fallback to 100vh on older browsers
+           that don't support svh. */
+        height: "100svh",
+        minHeight: "100svh",
+      }}
     >
       <div className="relative w-full h-full">
         {/* ── z-1 — Portrait (always at full opacity, scale animated) ─────

@@ -194,13 +194,13 @@ export default function MakerSection({ company }: { company: CompanyData }) {
               />
 
               {/* Corner brackets — atelier framing */}
-              <div className="absolute top-3 left-3 w-6 h-6 pointer-events-none"
+              <div className="hidden sm:block absolute top-3 left-3 w-6 h-6 pointer-events-none"
                 style={{ borderTop: "1px solid rgba(201,160,72,0.55)", borderLeft: "1px solid rgba(201,160,72,0.55)" }} />
-              <div className="absolute top-3 right-3 w-6 h-6 pointer-events-none"
+              <div className="hidden sm:block absolute top-3 right-3 w-6 h-6 pointer-events-none"
                 style={{ borderTop: "1px solid rgba(201,160,72,0.55)", borderRight: "1px solid rgba(201,160,72,0.55)" }} />
-              <div className="absolute bottom-3 left-3 w-6 h-6 pointer-events-none"
+              <div className="hidden sm:block absolute bottom-3 left-3 w-6 h-6 pointer-events-none"
                 style={{ borderBottom: "1px solid rgba(201,160,72,0.55)", borderLeft: "1px solid rgba(201,160,72,0.55)" }} />
-              <div className="absolute bottom-3 right-3 w-6 h-6 pointer-events-none"
+              <div className="hidden sm:block absolute bottom-3 right-3 w-6 h-6 pointer-events-none"
                 style={{ borderBottom: "1px solid rgba(201,160,72,0.55)", borderRight: "1px solid rgba(201,160,72,0.55)" }} />
             </div>
 
