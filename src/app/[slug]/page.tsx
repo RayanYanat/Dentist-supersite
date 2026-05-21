@@ -21,15 +21,18 @@ import ContactSection   from "@/sections/ContactSection";
 /* ── ISR config ────────────────────────────────────────────────────────────
  * dynamicParams = true  → slugs not in generateStaticParams are rendered
  *                          on first request, then cached.
- * revalidate = 86400    → cached HTML is fresh for 24 h. After that, the
+ * revalidate = 60       → cached HTML is fresh for 60 s. After that, the
  *                          next request triggers a background regeneration
- *                          (stale-while-revalidate).
+ *                          (stale-while-revalidate). Short window so edits
+ *                          made directly in Supabase (cabinet name, phone,
+ *                          city, etc.) propagate to live prospect URLs
+ *                          within a minute instead of waiting 24 h.
  * generateStaticParams  → returns [] so nothing is pre-built at deploy time;
  *                          every page is generated on-demand the first time
  *                          a prospect opens their unique link.
  * ─────────────────────────────────────────────────────────────────────────── */
 export const dynamicParams = true;
-export const revalidate    = 86400;
+export const revalidate    = 60;
 
 export async function generateStaticParams() {
   return [];

@@ -421,43 +421,61 @@ export default function HeroSection({ company }: { company: CompanyData }) {
          * so it doesn't collide with the navbar logo + nav links above it.
          */}
 
-        {/* Chapter indicator with pulsing dot — below navbar, left side */}
+        {/* Chapter indicator with pulsing dot — below navbar, left side.
+            Multi-layered text-shadow so it survives against the warm
+            photo background. Dot gets a small gold glow for the same
+            reason. */}
         <div className="s1-meta absolute top-24 left-6 lg:top-28 lg:left-12 z-[10] flex items-center gap-3">
           <span
             className="inline-block w-1.5 h-1.5 rounded-full"
             style={{
               backgroundColor: "#C9A048",
               animation:       "caret-pulse 1.8s ease-in-out infinite",
+              boxShadow:       "0 0 8px rgba(201,160,72,0.7)",
             }}
           />
           <span
             className="font-data text-[10px] tracking-[0.45em] uppercase"
-            style={{ color: "rgba(240,234,224,0.7)" }}
+            style={{
+              color:      "rgba(240,234,224,0.95)",
+              textShadow:
+                "0 0 1px rgba(0,0,0,0.95), " +
+                "0 1px 3px rgba(0,0,0,0.85), " +
+                "0 2px 14px rgba(0,0,0,0.7)",
+            }}
           >
             I &mdash; The Opening
           </span>
         </div>
 
-        {/* Right-side scroll progress rail — below navbar */}
+        {/* Right-side scroll progress rail — below navbar.
+            Rail labels get the same shadow treatment as the chapter
+            indicator so the 01/05 are readable over the photo. */}
         <div className="s1-rail absolute right-6 lg:right-10 top-40 bottom-32 z-[10] flex flex-col items-center gap-3">
           <span
             className="font-data text-[8px] tracking-[0.4em] uppercase"
-            style={{ color: "rgba(201,160,72,0.55)" }}
+            style={{
+              color:      "rgba(201,160,72,0.85)",
+              textShadow: "0 0 1px rgba(0,0,0,0.9), 0 1px 6px rgba(0,0,0,0.7)",
+            }}
           >
             01
           </span>
           <div
             className="flex-1 w-px relative"
-            style={{ backgroundColor: "rgba(201,160,72,0.12)" }}
+            style={{ backgroundColor: "rgba(201,160,72,0.22)" }}
           >
             <div
               className="s1-rail-grow absolute top-0 left-0 w-px h-full"
-              style={{ backgroundColor: "#C9A048" }}
+              style={{ backgroundColor: "#C9A048", boxShadow: "0 0 6px rgba(201,160,72,0.5)" }}
             />
           </div>
           <span
             className="font-data text-[8px] tracking-[0.4em] uppercase"
-            style={{ color: "rgba(201,160,72,0.25)" }}
+            style={{
+              color:      "rgba(201,160,72,0.5)",
+              textShadow: "0 0 1px rgba(0,0,0,0.9), 0 1px 6px rgba(0,0,0,0.6)",
+            }}
           >
             05
           </span>
@@ -467,7 +485,10 @@ export default function HeroSection({ company }: { company: CompanyData }) {
         <div className="s1-cue absolute bottom-6 left-1/2 -translate-x-1/2 z-[10] flex flex-col items-center gap-2.5 pointer-events-none">
           <span
             className="font-data text-[9px] tracking-[0.45em] uppercase"
-            style={{ color: "rgba(201,160,72,0.5)" }}
+            style={{
+              color:      "rgba(201,160,72,0.85)",
+              textShadow: "0 0 1px rgba(0,0,0,0.9), 0 1px 6px rgba(0,0,0,0.7)",
+            }}
           >
             Continue
           </span>
