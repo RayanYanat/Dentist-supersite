@@ -21,18 +21,19 @@ import ContactSection   from "@/sections/ContactSection";
 /* ── ISR config ────────────────────────────────────────────────────────────
  * dynamicParams = true  → slugs not in generateStaticParams are rendered
  *                          on first request, then cached.
- * revalidate = 60       → cached HTML is fresh for 60 s. After that, the
- *                          next request triggers a background regeneration
- *                          (stale-while-revalidate). Short window so edits
- *                          made directly in Supabase (cabinet name, phone,
- *                          city, etc.) propagate to live prospect URLs
- *                          within a minute instead of waiting 24 h.
+ * revalidate = 3600     → cached HTML is fresh for 1 hour. Each prospect
+ *                          URL is one-shot (sent once, viewed a few times
+ *                          by that single prospect) so aggressive
+ *                          revalidation buys nothing — but 1 h still lets
+ *                          Supabase edits propagate within the same
+ *                          outreach session. For instant cache flush after
+ *                          editing, a git push triggers a Netlify rebuild.
  * generateStaticParams  → returns [] so nothing is pre-built at deploy time;
  *                          every page is generated on-demand the first time
  *                          a prospect opens their unique link.
  * ─────────────────────────────────────────────────────────────────────────── */
 export const dynamicParams = true;
-export const revalidate    = 60;
+export const revalidate    = 3600;
 
 export async function generateStaticParams() {
   return [];
