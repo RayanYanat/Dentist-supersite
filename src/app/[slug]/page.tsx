@@ -43,7 +43,31 @@ export async function generateStaticParams() {
  * `zone` is computed here from the raw `city` column — it is never persisted
  * in Supabase. Every section that displays a service-area label reads
  * company.zone, never re-derives it.
+ *
+ * Sanitization runs on every text field — the Google-Maps scraper that fills
+ * the leads table prefixes addresses with a private-use-area glyph (U+E0C8,
+ * a map-pin icon from the scraper's source font). That glyph renders as a
+ * "missing tofu" rectangle on every prospect page until cleaned. The city
+ * field also gets bureaucratic suffixes ("Dubai Emirate", "Riyadh Region")
+ * stripped because they read odd in editorial copy ("Cosmetic Dentistry in
+ * Dubai Emirate" → "Cosmetic Dentistry in Dubai").
  * ─────────────────────────────────────────────────────────────────────────── */
+
+/** Strip Unicode private-use-area characters (U+E000–U+F8FF). These are
+ *  scraper-added icon glyphs that render as missing-glyph rectangles on
+ *  the prospect's device. */
+function stripPUA(s: string | null | undefined): string | null {
+  if (!s) return null;
+  const cleaned = s.replace(/[-]/g, "").trim();
+  return cleaned || null;
+}
+
+/** Strip bureaucratic suffixes from city names so editorial copy reads
+ *  naturally across regions ("Dubai Emirate" → "Dubai"). */
+function normalizeCity(city: string): string {
+  return city.replace(/\s+(Emirate|Region|Province|Governorate|Prefecture|County|Metropolitan\s+Area)$/i, "").trim();
+}
+
 async function getCompany(slug: string): Promise<CompanyData | null> {
   const { data, error } = await getSupabase()
     .from("leads")
@@ -54,7 +78,16 @@ async function getCompany(slug: string): Promise<CompanyData | null> {
   if (error || !data) return null;
 
   const row = data as Omit<CompanyData, "zone">;
-  return { ...row, zone: `${row.city} & surrounding areas` };
+  const cleanCity = normalizeCity(stripPUA(row.city) ?? "");
+
+  return {
+    ...row,
+    name:    stripPUA(row.name)    ?? row.name,
+    city:    cleanCity,
+    address: stripPUA(row.address),
+    email:   stripPUA(row.email),
+    zone:    `${cleanCity} & surrounding areas`,
+  };
 }
 
 /* ── Dynamic metadata ───────────────────────────────────────────────────── */

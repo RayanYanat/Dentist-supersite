@@ -25,8 +25,19 @@ export const STATS = [
 ];
 
 /**
- * Certifications shown in the footer + signature section.
- * Generic to American cosmetic dentistry — would be swapped per-region
- * (e.g. France: Conseil de l'Ordre, ADF) in a localized build.
+ * Atelier signal badges shown in the footer.
+ * Previously this was a list of US-specific cosmetic-dentistry
+ * certifications (ADA, AGD, AACD, BBB). That broke immediately
+ * for any non-US prospect — a Saudi or UK dentist saw American
+ * acronyms in their own site, instant template-tell.
+ *
+ * Replaced with country-agnostic *atelier signals* — claims about
+ * how the practice works, not about which trade body it belongs to.
+ * These read correctly regardless of jurisdiction.
  */
-export const CERTIFS = ["ADA", "AGD", "AACD", "BBB"];
+export const CERTIFS = [
+  "Atelier-signed",
+  "Lithium disilicate",
+  "Hand-layered",
+  "Single hand per case",
+];
