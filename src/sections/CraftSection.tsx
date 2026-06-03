@@ -279,7 +279,7 @@ export default function CraftSection({ company }: { company: CompanyData }) {
               className="font-data text-[10px] tracking-[0.45em] uppercase"
               style={{ color: "rgba(240,234,224,0.7)" }}
             >
-              I &mdash; The Crafts
+              II &mdash; The Crafts
             </span>
           </div>
 

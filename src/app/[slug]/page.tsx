@@ -12,11 +12,12 @@ import SmoothScroll  from "@/components/shared/SmoothScroll";
 import VisitTracker  from "@/components/shared/VisitTracker";
 import Navbar        from "@/components/layout/Navbar";
 import Footer        from "@/components/layout/Footer";
-import HeroSection      from "@/sections/HeroSection";
-import CraftSection     from "@/sections/CraftSection";
-import GallerySection   from "@/sections/GallerySection";
-import MakerSection     from "@/sections/SignatureSection"; /* file name kept; chapter is "The Team" */
-import ContactSection   from "@/sections/ContactSection";
+import HeroSection           from "@/sections/HeroSection";
+import TransformationSection from "@/sections/TransformationSection";
+import CraftSection          from "@/sections/CraftSection";
+import GallerySection        from "@/sections/GallerySection";
+import MakerSection          from "@/sections/SignatureSection"; /* file name kept; chapter is "The Team" */
+import ContactSection        from "@/sections/ContactSection";
 
 /* ── ISR config ────────────────────────────────────────────────────────────
  * dynamicParams = true  → slugs not in generateStaticParams are rendered
@@ -147,11 +148,12 @@ export default async function SlugPage({
         {/* GSAPConfig first child — registers plugins before ScrollTriggers */}
         <GSAPConfig />
 
-        <HeroSection      company={company} />
-        <CraftSection     company={company} />
-        <GallerySection   company={company} />
-        <MakerSection     company={company} />
-        <ContactSection   company={company} />
+        <HeroSection           company={company} />
+        <TransformationSection company={company} />
+        <CraftSection          company={company} />
+        <GallerySection        company={company} />
+        <MakerSection          company={company} />
+        <ContactSection        company={company} />
 
         <Footer company={company} />
       </main>
