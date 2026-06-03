@@ -56,7 +56,7 @@ const DISCIPLINES: Discipline[] = [
       { num: "05", label: "Try-in, placement, hand-polish",             timing: "1 visit" },
     ],
     footer:     "From 3 visits · 12 days",
-    photo:      "photo-1776406987595-ba14f3510c07",
+    photo:      "/images/dental/veneers.png",
     photoPos:   "center 50%",
     visualType: "loupe",
   },
@@ -72,7 +72,7 @@ const DISCIPLINES: Discipline[] = [
       { num: "04", label: "Patient sign-off + treatment plan",          timing: "1 visit" },
     ],
     footer:     "From 2 visits · 8 days",
-    photo:      "photo-1769559893692-c6d0623bf8e4",
+    photo:      "/images/dental/smile-design.png",
     photoPos:   "center 50%",
     visualType: "dsd",
   },
@@ -89,7 +89,7 @@ const DISCIPLINES: Discipline[] = [
       { num: "05", label: "Final crown placement",                      timing: "1 visit" },
     ],
     footer:     "From 4 visits · 16 weeks",
-    photo:      "photo-1771442873035-474765b40ac6",
+    photo:      "/images/dental/implants.png",
     photoPos:   "center 50%",
     visualType: "implant",
   },
@@ -104,8 +104,8 @@ const DISCIPLINES: Discipline[] = [
       { num: "03", label: "Hand-sculpting + polish",                    timing: "30 min" },
     ],
     footer:     "1 visit · 90 minutes",
-    photo:      "photo-1606811971618-4486d14f3f99",
-    photoPos:   "center 45%",
+    photo:      "/images/dental/bonding.png",
+    photoPos:   "center 50%",
     visualType: "bonding",
   },
 ];
@@ -449,7 +449,7 @@ function DisciplineVisualLoupe({
   loupeContainerRef: React.RefObject<HTMLDivElement | null>;
   loupeRef:          React.RefObject<HTMLDivElement | null>;
 }) {
-  const photoUrl = `https://images.unsplash.com/${photo}?auto=format&fit=crop&w=1600&q=85`;
+  const photoUrl = photo;
   return (
     <div className="relative w-full" style={{ aspectRatio: "4 / 5" }}>
       <div
@@ -510,7 +510,7 @@ function DisciplineVisualDSD({ photo, photoPos }: { photo: string; photoPos: str
     <div className="relative w-full" style={{ aspectRatio: "4 / 5" }}>
       <div className="relative w-full h-full overflow-hidden">
         <Image
-          src={`https://images.unsplash.com/${photo}?auto=format&fit=crop&w=1600&q=85`}
+          src={photo}
           alt=""
           fill
           sizes="(min-width: 1024px) 40vw, 100vw"
@@ -591,7 +591,7 @@ function DisciplineVisualImplant({ photo, photoPos }: { photo: string; photoPos:
     <div className="relative w-full" style={{ aspectRatio: "4 / 5" }}>
       <div className="relative w-full h-full overflow-hidden">
         <Image
-          src={`https://images.unsplash.com/${photo}?auto=format&fit=crop&w=1600&q=85`}
+          src={photo}
           alt=""
           fill
           sizes="(min-width: 1024px) 40vw, 100vw"
@@ -635,7 +635,7 @@ function DisciplineVisualBonding({ photo, photoPos }: { photo: string; photoPos:
     <div className="relative w-full" style={{ aspectRatio: "4 / 5" }}>
       <div className="relative w-full h-full overflow-hidden">
         <Image
-          src={`https://images.unsplash.com/${photo}?auto=format&fit=crop&w=1600&q=85`}
+          src={photo}
           alt=""
           fill
           sizes="(min-width: 1024px) 40vw, 100vw"

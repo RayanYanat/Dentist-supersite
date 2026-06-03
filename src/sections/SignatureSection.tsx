@@ -176,12 +176,12 @@ export default function MakerSection({ company }: { company: CompanyData }) {
                 }}
               >
                 <Image
-                  src="https://images.unsplash.com/photo-1695986061759-bcf4ca33d0c4?auto=format&fit=crop&w=1600&q=90"
+                  src="/images/dental/team.png"
                   alt=""
                   fill
                   sizes="(min-width: 1024px) 40vw, 100vw"
                   className="object-cover"
-                  style={{ objectPosition: "center 50%" }}
+                  style={{ objectPosition: "center 30%" }}
                 />
               </div>
 

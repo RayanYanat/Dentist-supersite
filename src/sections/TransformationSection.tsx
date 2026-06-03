@@ -47,9 +47,10 @@ import type { CompanyData } from "@/lib/types";
  * caption strip.
  */
 
-/* TODO swap with generated before/after pair when ready. */
-const BEFORE_IMG = "photo-1606811971618-4486d14f3f99"; // placeholder: dental close-up
-const AFTER_IMG  = "photo-1654373535457-383a0a4d00f9"; // placeholder: white teeth macro
+/* Custom generated before/after pair — same person, same framing,
+ * same lighting, only the teeth change. Both PNGs live in public/. */
+const BEFORE_IMG = "/images/dental/before.png";
+const AFTER_IMG  = "/images/dental/after.png";
 
 export default function TransformationSection({ company }: { company: CompanyData }) {
   void company;
@@ -146,18 +147,18 @@ export default function TransformationSection({ company }: { company: CompanyDat
       {/* ── z-1 — BEFORE image (full visible) ─────────────────────────── */}
       <div className="absolute inset-0 z-[1]">
         <Image
-          src={`https://images.unsplash.com/${BEFORE_IMG}?auto=format&fit=crop&w=2400&q=90`}
+          src={BEFORE_IMG}
           alt=""
           fill
           sizes="100vw"
           className="object-cover"
           style={{
-            objectPosition: "center 45%",
-            /* Slightly cool desaturated grade — reads as "the smile
-               before the work". Once the generated BEFORE arrives,
-               drop this filter (the asset should already carry its
-               own colour grade). */
-            filter: "brightness(0.88) contrast(1.06) saturate(0.62) hue-rotate(-4deg)",
+            objectPosition: "center 38%",
+            /* Generated BEFORE already carries its own grade (yellowed
+               teeth, neutral skin) — keep filter near-identity, just a
+               touch of darkening to integrate into the obsidian section
+               background. */
+            filter: "brightness(0.94) contrast(1.02)",
           }}
         />
       </div>
@@ -168,15 +169,17 @@ export default function TransformationSection({ company }: { company: CompanyDat
         className="absolute inset-0 z-[2] overflow-hidden will-change-[clip-path]"
       >
         <Image
-          src={`https://images.unsplash.com/${AFTER_IMG}?auto=format&fit=crop&w=2400&q=90`}
+          src={AFTER_IMG}
           alt=""
           fill
           sizes="100vw"
           className="object-cover"
           style={{
-            objectPosition: "center 45%",
-            /* Warm vibrant grade — reads as "the smile after the work". */
-            filter: "brightness(1.08) contrast(1.12) saturate(1.14)",
+            objectPosition: "center 38%",
+            /* Generated AFTER already carries the warm cosmetic grade
+               (brilliant white teeth, healthy skin) — slight contrast
+               bump only, no need to push saturation. */
+            filter: "brightness(1.0) contrast(1.06)",
           }}
         />
 
