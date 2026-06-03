@@ -302,14 +302,19 @@ export default function HeroSection({ company }: { company: CompanyData }) {
               desktop). Separate transform layers prevent GSAP tweens
               from clobbering each other. */}
           <div className="s1-photo-inner absolute inset-0 lg:will-change-transform">
+            {/* TODO — current image is a placeholder fallback. The generated
+                portrait-after.png felt too tame for the cinematic intro
+                (curtain reveal + masthead). A new hero asset needs to be
+                generated with a tighter editorial brief — see prompt notes
+                in the chat thread. */}
             <Image
-              src="/images/dental/portrait-after.png"
+              src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=2400&q=90"
               alt=""
               fill
               sizes="100vw"
               priority
               className="object-cover"
-              style={{ objectPosition: "center 30%" }}
+              style={{ objectPosition: "center 28%" }}
             />
           </div>
         </div>
