@@ -9,272 +9,409 @@ import type { CompanyData } from "@/lib/types";
 /**
  * Scene I — "The Transformation"
  *
- * Sits between Hero and Crafts. The prospect sees a beautiful smile
- * in the hero, then immediately the proof of the cosmetic work: a
- * real before/after pair, revealed by a scroll-tied veil retreat.
+ * Sits between Hero and Crafts. Structure changed in this iteration:
  *
- * Mechanic — two stacked images, scrub-driven clip-path reveal:
- *   1. The BEFORE image fills the section at full opacity.
- *   2. The AFTER image is stacked on top, clipped via inset(0 100% 0 0)
- *      so only the leftmost 0% is visible — i.e. completely hidden.
- *   3. As the user scrolls, the clip-path animates to inset(0 0 0 0)
- *      — the right inset shrinks 100% → 0%, revealing the AFTER from
- *      LEFT to RIGHT.
- *   4. A vertical gold beam tracks the right edge of the visible
- *      AFTER (the boundary between BEFORE and AFTER).
- *   5. A DSD precision overlay (smile line, midline, canines, φ
- *      bracket) lives inside the same AFTER clip — it appears as
- *      the AFTER is revealed and draws itself in via stroke-dashoffset.
+ *   1. Chapter intro panel (~70vh) — eases the transition from the
+ *      hero. Without this, the cut from the hero portrait straight
+ *      into the first case felt abrupt.
  *
- * Why this works:
- *   The previous attempt used a single composite "before/after"
- *   Unsplash photo with a watermark and odd composition. Bad asset.
- *   With a generated pair (same person, same framing, same lighting,
- *   teeth modified for the AFTER), the mechanic finally has matter:
- *   the prospect sees an actual cosmetic transformation, not a
- *   filter trick.
+ *   2. CASE I — pinned scrub with veil retreat (~120vh). Uses the
+ *      portrait pair (same subject as the hero photo, so the prospect
+ *      reads "the woman we showed in the hero — here's how she got
+ *      there"). DSD precision overlay reveals on top as the AFTER
+ *      uncovers. Positions tuned for portrait framing (smile sits
+ *      lower in the frame than the close-up pair).
  *
- * ┌── ACTION REQUIRED ───────────────────────────────────────────────┐
- * │ The two image URLs below are PLACEHOLDERS using existing       │
- * │ Unsplash assets. Once the AI-generated before/after pair is    │
- * │ ready, swap BEFORE_IMG and AFTER_IMG to the new asset URLs.    │
- * │ Everything else (mechanic, positioning, overlay) stays.        │
- * └───────────────────────────────────────────────────────────────────┘
+ *   3. CASE II — pinned scrub with veil retreat (~90vh, shorter).
+ *      Uses the close-up pair (different patient). No DSD overlay
+ *      — the section signal is "more than one case", not "more
+ *      analysis". Faster pin, lighter feel.
  *
- * Pacing: 120vh pin, scrub 0.6 — same cadence as the previous
- * Composition section. Pin disabled on mobile (touch + pin = iOS
- * pain) — mobile gets the AFTER image full-bleed with a static
- * caption strip.
+ * Both cases share the same veil-retreat mechanic via a reusable
+ * helper. The mechanic:
+ *   AFTER is stacked on top of BEFORE, clipped to inset(0 100% 0 0)
+ *   (i.e. invisible). Scroll progresses the clip to inset(0 0 0 0).
+ *   A gold beam tracks the right edge of the visible AFTER.
+ *
+ * Mobile: pin disabled on every panel (touch + pin = iOS pain).
+ * Both cases show the AFTER full-bleed with a small caption strip.
  */
 
-/* Custom generated before/after pair — same person, same framing,
- * same lighting, only the teeth change. Both PNGs live in public/. */
-const BEFORE_IMG = "/images/dental/before.png";
-const AFTER_IMG  = "/images/dental/after.png";
+type CaseConfig = {
+  index:        string;       // "Case I" / "Case II"
+  headline:     string;       // mono-tagline
+  duration:     string;       // "12 days · 3 visits"
+  before:       string;       // image path
+  after:        string;       // image path
+  objectPos:    string;       // tuned per image composition
+  showDSD:      boolean;      // overlay on the AFTER half only
+  pinDuration:  string;       // pin scroll length, e.g. "+=110%"
+  /** Per-case class scope. Lets two cases coexist without sharing
+   *  classNames (the GSAP timeline targets `.{idScope}-precision-line`
+   *  etc., so they need distinct names). */
+  idScope:      string;
+};
+
+const CASE_ONE: CaseConfig = {
+  index:       "Case I",
+  headline:    "Smile Design + Veneers",
+  duration:    "12 days · 3 visits",
+  before:      "/images/dental/portrait-before.png",
+  after:       "/images/dental/portrait-after.png",
+  objectPos:   "center 30%",
+  showDSD:     true,
+  pinDuration: "+=120%",
+  idScope:     "tx1",
+};
+
+const CASE_TWO: CaseConfig = {
+  index:       "Case II",
+  headline:    "Bonding + Whitening",
+  duration:    "1 visit · 90 minutes",
+  before:      "/images/dental/before.png",
+  after:       "/images/dental/after.png",
+  objectPos:   "center 38%",
+  showDSD:     false,
+  pinDuration: "+=90%",
+  idScope:     "tx2",
+};
 
 export default function TransformationSection({ company }: { company: CompanyData }) {
   void company;
   const sectionRef = useRef<HTMLElement>(null);
-  const afterRef   = useRef<HTMLDivElement>(null);
-  const sepRef     = useRef<HTMLDivElement>(null);
 
   useGSAP(
     () => {
       gsap.registerPlugin(ScrollTrigger);
 
-      const section = sectionRef.current;
-      const after   = afterRef.current;
-      const sep     = sepRef.current;
-      if (!section || !after || !sep) return;
+      /* Intro reveal — fade in on enter */
+      gsap.set([".tx-intro-meta", ".tx-intro-rule", ".tx-intro-heading", ".tx-intro-lede", ".tx-intro-bridge"],
+        { opacity: 0, y: 18 });
+      ScrollTrigger.create({
+        trigger: ".tx-intro",
+        start:   "top 75%",
+        once:    true,
+        onEnter: () => {
+          gsap.to(".tx-intro-bridge", { opacity: 1, y: 0, duration: 0.7, ease: "power2.out" });
+          gsap.to(".tx-intro-meta",   { opacity: 1, y: 0, duration: 0.6, ease: "power2.out", delay: 0.15 });
+          gsap.to(".tx-intro-rule",   { opacity: 1, y: 0, duration: 0.7, ease: "expo.out",   delay: 0.25 });
+          gsap.to(".tx-intro-heading",{ opacity: 1, y: 0, duration: 0.9, ease: "power3.out", delay: 0.35 });
+          gsap.to(".tx-intro-lede",   { opacity: 1, y: 0, duration: 0.8, ease: "power2.out", delay: 0.65 });
+        },
+      });
 
       const mm = gsap.matchMedia();
 
+      /* Wire both cases on desktop only — pin + scrub doesn't play
+         nice with touch on iOS. */
       mm.add("(min-width: 1024px)", () => {
-        /* Initial state — AFTER clipped to 0 width (right inset 100%),
-           separator parked at the left edge. */
-        gsap.set(after, { clipPath: "inset(0% 100% 0% 0%)" });
-        gsap.set(sep,   { left:     "0%" });
-
-        const tl = gsap.timeline({
-          scrollTrigger: {
-            trigger:       section,
-            start:         "top top",
-            end:           "+=120%",
-            pin:           true,
-            pinType:       "fixed",
-            anticipatePin: 1,
-            scrub:         0.6,
-          },
-        });
-
-        /* AFTER reveals from left to right: right inset shrinks
-           100% → 0%. */
-        tl.to(after, { clipPath: "inset(0% 0% 0% 0%)", ease: "none", duration: 1 }, 0);
-
-        /* Separator beam tracks the right edge of the visible AFTER. */
-        tl.to(sep, { left: "100%", ease: "none", duration: 1 }, 0);
-
-        /* DSD precision overlay — lives inside the AFTER container so
-           it shares the same clip. Lines draw themselves via the same
-           scrub timeline; marks pop; labels fade. */
-        gsap.set(".tx-precision",       { opacity: 0 });
-        gsap.set(".tx-precision-mark",  { opacity: 0, scale: 0, transformOrigin: "center center" });
-        gsap.set(".tx-precision-label", { opacity: 0, y: 4 });
-
-        tl.to(".tx-precision",       { opacity: 1, duration: 0.05, ease: "none" },         0.30);
-        tl.to(".tx-precision-line",  { strokeDashoffset: 0, duration: 0.55, ease: "none" }, 0.38);
-        tl.to(".tx-precision-mark",  { opacity: 1, scale: 1, duration: 0.3, ease: "back.out(1.6)" }, 0.75);
-        tl.to(".tx-precision-label", { opacity: 1, y: 0, duration: 0.3, stagger: 0.07 },    0.58);
-
-        return () => {
-          gsap.set(after, { clearProps: "all" });
-          gsap.set(sep,   { clearProps: "all" });
-        };
+        wireCase(CASE_ONE);
+        wireCase(CASE_TWO);
+        return undefined;
       });
 
-      /* Mobile (< lg) — no pin, no scrub. The section shows the AFTER
-         image full-bleed with a small caption strip. The before/after
-         storytelling is desktop-only because the veil-retreat scrub
-         doesn't translate well to touch scroll. */
-
-      /* Persistent UI fade-in on scroll approach (both desktop + mobile) */
-      gsap.set(
-        [".tx-meta", ".tx-cap", ".tx-label-before", ".tx-label-after", ".tx-cue"],
-        { opacity: 0 }
-      );
-      ScrollTrigger.create({
-        trigger: section,
-        start:   "top 80%",
-        once:    true,
-        onEnter: () => {
-          gsap.to(
-            [".tx-meta", ".tx-cap", ".tx-label-before", ".tx-label-after", ".tx-cue"],
-            { opacity: 1, duration: 0.7, stagger: 0.08, ease: "power2.out" }
-          );
-        },
+      /* Persistent UI fades (chapter dot, labels) on each case */
+      [CASE_ONE, CASE_TWO].forEach((c) => {
+        gsap.set(
+          [`.${c.idScope}-meta`, `.${c.idScope}-cap`, `.${c.idScope}-label-before`, `.${c.idScope}-label-after`, `.${c.idScope}-cue`],
+          { opacity: 0 }
+        );
+        ScrollTrigger.create({
+          trigger: `.${c.idScope}-section`,
+          start:   "top 80%",
+          once:    true,
+          onEnter: () => {
+            gsap.to(
+              [`.${c.idScope}-meta`, `.${c.idScope}-cap`, `.${c.idScope}-label-before`, `.${c.idScope}-label-after`, `.${c.idScope}-cue`],
+              { opacity: 1, duration: 0.7, stagger: 0.08, ease: "power2.out" }
+            );
+          },
+        });
       });
     },
     { scope: sectionRef }
   );
 
+  /** Wire a single case's veil-retreat scrub. Self-contained on the
+   *  case's idScope so two cases can coexist. */
+  function wireCase(c: CaseConfig) {
+    const section = document.querySelector(`.${c.idScope}-section`) as HTMLElement | null;
+    const after   = document.querySelector(`.${c.idScope}-after`)   as HTMLElement | null;
+    const sep     = document.querySelector(`.${c.idScope}-sep`)     as HTMLElement | null;
+    if (!section || !after || !sep) return;
+
+    gsap.set(after, { clipPath: "inset(0% 100% 0% 0%)" });
+    gsap.set(sep,   { left:     "0%" });
+
+    const tl = gsap.timeline({
+      scrollTrigger: {
+        trigger:       section,
+        start:         "top top",
+        end:           c.pinDuration,
+        pin:           true,
+        pinType:       "fixed",
+        anticipatePin: 1,
+        scrub:         0.6,
+      },
+    });
+
+    tl.to(after, { clipPath: "inset(0% 0% 0% 0%)", ease: "none", duration: 1 }, 0);
+    tl.to(sep,   { left: "100%", ease: "none", duration: 1 }, 0);
+
+    /* DSD overlay only for the first case (the one with the portrait pair). */
+    if (c.showDSD) {
+      gsap.set(`.${c.idScope}-precision`,       { opacity: 0 });
+      gsap.set(`.${c.idScope}-precision-mark`,  { opacity: 0, scale: 0, transformOrigin: "center center" });
+      gsap.set(`.${c.idScope}-precision-label`, { opacity: 0, y: 4 });
+
+      tl.to(`.${c.idScope}-precision`,       { opacity: 1, duration: 0.05, ease: "none" },         0.30);
+      tl.to(`.${c.idScope}-precision-line`,  { strokeDashoffset: 0, duration: 0.55, ease: "none" }, 0.38);
+      tl.to(`.${c.idScope}-precision-mark`,  { opacity: 1, scale: 1, duration: 0.3, ease: "back.out(1.6)" }, 0.75);
+      tl.to(`.${c.idScope}-precision-label`, { opacity: 1, y: 0, duration: 0.3, stagger: 0.07 },    0.58);
+    }
+  }
+
   return (
     <section
       ref={sectionRef}
       id="transformation"
-      className="relative w-full overflow-hidden"
-      style={{ height: "100vh", backgroundColor: "#0C0B09" }}
+      className="relative w-full"
+      style={{ backgroundColor: "#0C0B09" }}
     >
-      {/* ── z-1 — BEFORE image (full visible) ─────────────────────────── */}
-      <div className="absolute inset-0 z-[1]">
-        <Image
-          src={BEFORE_IMG}
-          alt=""
-          fill
-          sizes="100vw"
-          className="object-cover"
-          style={{
-            objectPosition: "center 38%",
-            /* Generated BEFORE already carries its own grade (yellowed
-               teeth, neutral skin) — keep filter near-identity, just a
-               touch of darkening to integrate into the obsidian section
-               background. */
-            filter: "brightness(0.94) contrast(1.02)",
-          }}
+      {/* ════════════════════════════════════════════════════════════
+       * INTRO PANEL — eases the transition from the hero
+       * ════════════════════════════════════════════════════════════ */}
+      <div className="tx-intro relative w-full" style={{ minHeight: "70vh" }}>
+        {/* Top hairline seam — borrowed from Crafts / Ledger for visual
+           continuity. Anchors the chapter break. */}
+        <div
+          className="absolute top-0 left-0 right-0 h-px"
+          style={{ background: "linear-gradient(to right, transparent, rgba(201,160,72,0.32), transparent)" }}
         />
-      </div>
 
-      {/* ── z-2 — AFTER image (clipped, revealed by scrub) ────────────── */}
-      <div
-        ref={afterRef}
-        className="absolute inset-0 z-[2] overflow-hidden will-change-[clip-path]"
-      >
-        <Image
-          src={AFTER_IMG}
-          alt=""
-          fill
-          sizes="100vw"
-          className="object-cover"
+        {/* Soft gold breath upper-right */}
+        <div
+          className="absolute -top-32 -right-32 w-[700px] h-[700px] rounded-full pointer-events-none"
           style={{
-            objectPosition: "center 38%",
-            /* Generated AFTER already carries the warm cosmetic grade
-               (brilliant white teeth, healthy skin) — slight contrast
-               bump only, no need to push saturation. */
-            filter: "brightness(1.0) contrast(1.06)",
+            background: "radial-gradient(ellipse at center, rgba(201,160,72,0.07) 0%, transparent 65%)",
+            animation:  "breathe-gold 18s ease-in-out infinite",
           }}
         />
 
-        {/* DSD precision overlay — inside the AFTER clip so it only
-           shows on the revealed side. Centred on the smile (x≈50,
-           y≈58). When the generated pair lands, fine-tune the y
-           coordinates to match where the new smile actually sits in
-           the frame. */}
-        <svg
-          className="tx-precision absolute inset-0 w-full h-full pointer-events-none"
-          viewBox="0 0 100 100"
-          preserveAspectRatio="none"
-          aria-hidden="true"
-        >
-          {/* Vertical midline */}
-          <line
-            x1="50" y1="22" x2="50" y2="78"
-            stroke="#C9A048" strokeWidth="0.16"
-            vectorEffect="non-scaling-stroke"
-            strokeDasharray="56" strokeDashoffset="56"
-            opacity="0.42"
-            className="tx-precision-line"
-          />
-          {/* Smile line */}
-          <line
-            x1="26" y1="62" x2="74" y2="62"
-            stroke="#C9A048" strokeWidth="0.30"
-            vectorEffect="non-scaling-stroke"
-            strokeDasharray="48" strokeDashoffset="48"
-            className="tx-precision-line"
-          />
-          {/* Incisal edge */}
-          <line
-            x1="34" y1="54" x2="66" y2="54"
-            stroke="#C9A048" strokeWidth="0.16"
-            vectorEffect="non-scaling-stroke"
-            strokeDasharray="32" strokeDashoffset="32"
-            opacity="0.55"
-            className="tx-precision-line"
-          />
-          {/* Canine markers */}
-          <line
-            x1="36" y1="56" x2="36" y2="66"
-            stroke="#C9A048" strokeWidth="0.22"
-            vectorEffect="non-scaling-stroke"
-            strokeDasharray="10" strokeDashoffset="10"
-            className="tx-precision-line"
-          />
-          <line
-            x1="64" y1="56" x2="64" y2="66"
-            stroke="#C9A048" strokeWidth="0.22"
-            vectorEffect="non-scaling-stroke"
-            strokeDasharray="10" strokeDashoffset="10"
-            className="tx-precision-line"
-          />
-          {/* φ bracket */}
-          <line
-            x1="55" y1="57" x2="55" y2="63"
-            stroke="#C9A048" strokeWidth="0.18"
-            vectorEffect="non-scaling-stroke"
-            strokeDasharray="6" strokeDashoffset="6"
-            opacity="0.7"
-            className="tx-precision-line"
-          />
-          {/* Midline + smile-line intersection */}
-          <circle cx="50" cy="62" r="0.55" fill="#C9A048" className="tx-precision-mark" />
-        </svg>
+        <div className="relative max-w-5xl mx-auto px-6 lg:px-12 pt-32 lg:pt-40 pb-16 lg:pb-24">
 
-        {/* Measurement labels */}
-        <div className="tx-precision absolute inset-0 pointer-events-none">
-          <span
-            className="tx-precision-label absolute font-data tracking-[0.32em] uppercase"
-            style={{ top: "57%", left: "73%", fontSize: "10px", color: "rgba(201,160,72,0.95)" }}
+          {/* Bridge typography — quietly extends the hero's voice
+             ("Smile, Composed.") into this section before the formal
+             chapter intro. Gives the eye somewhere to land instead of
+             flying straight into a new chapter dot. */}
+          <p
+            className="tx-intro-bridge font-display italic mb-12 lg:mb-16"
+            style={{
+              fontSize:      "clamp(1.1rem, 1.5vw, 1.4rem)",
+              lineHeight:    1.4,
+              color:         "rgba(216,210,200,0.45)",
+              letterSpacing: "-0.005em",
+              maxWidth:      "32ch",
+            }}
           >
-            &phi;&thinsp;1.618
-          </span>
-          <span
-            className="tx-precision-label absolute font-data tracking-[0.28em] uppercase"
-            style={{ top: "66%", left: "50%", transform: "translateX(-50%)", fontSize: "8px", color: "rgba(201,160,72,0.72)" }}
+            …and here is the work, before and after.
+          </p>
+
+          {/* Chapter indicator */}
+          <div className="tx-intro-meta flex items-center gap-3 mb-8">
+            <span
+              className="inline-block w-1.5 h-1.5 rounded-full"
+              style={{
+                backgroundColor: "#C9A048",
+                animation:       "caret-pulse 1.8s ease-in-out infinite",
+                boxShadow:       "0 0 8px rgba(201,160,72,0.7)",
+              }}
+            />
+            <span
+              className="font-data text-[10px] tracking-[0.45em] uppercase"
+              style={{ color: "rgba(240,234,224,0.85)" }}
+            >
+              I &mdash; The Transformation
+            </span>
+          </div>
+
+          {/* Hairline rule */}
+          <div
+            className="tx-intro-rule h-px w-16 mb-8"
+            style={{ backgroundColor: "#C9A048", transformOrigin: "left center" }}
+          />
+
+          {/* Heading */}
+          <h2
+            className="tx-intro-heading font-display"
+            style={{
+              fontSize:      "clamp(2.6rem, 6.5vw, 5.6rem)",
+              lineHeight:    "0.96",
+              letterSpacing: "-0.02em",
+              color:         "#F0EAE0",
+              fontWeight:    400,
+            }}
           >
-            Smile line &middot; 47.2&thinsp;mm
-          </span>
-          <span
-            className="tx-precision-label absolute font-data tracking-[0.28em] uppercase"
-            style={{ top: "20%", left: "50%", transform: "translateX(-50%)", fontSize: "8.5px", color: "rgba(201,160,72,0.55)" }}
+            Two cases.
+            <br />
+            <span style={{ fontStyle: "italic", color: "#D9B25C" }}>One hand.</span>
+          </h2>
+
+          {/* Lede */}
+          <p
+            className="tx-intro-lede mt-8 text-base leading-relaxed max-w-lg"
+            style={{ color: "rgba(216,210,200,0.6)" }}
           >
-            DSD &middot; Composed
-          </span>
+            Recent compositions from the atelier. The first redesigned with
+            a complete smile architecture; the second a single-visit
+            correction. Same hand, same protocol — different scope.
+          </p>
         </div>
       </div>
 
-      {/* ── z-3 — Separator beam (tracks AFTER's right edge) ──────────── */}
+      {/* ════════════════════════════════════════════════════════════
+       * CASE I — Portrait pair (same subject as hero), DSD overlay
+       * ════════════════════════════════════════════════════════════ */}
+      <CasePanel config={CASE_ONE} />
+
+      {/* ════════════════════════════════════════════════════════════
+       * CASE II — Close-up pair, no overlay
+       * ════════════════════════════════════════════════════════════ */}
+      <CasePanel config={CASE_TWO} />
+    </section>
+  );
+}
+
+/* ────────────────────────────────────────────────────────────────
+ * Reusable case panel.
+ * Pinned 100vh on desktop, vertical stack on mobile.
+ * ──────────────────────────────────────────────────────────────── */
+function CasePanel({ config }: { config: CaseConfig }) {
+  const { idScope, before, after, objectPos, showDSD, index, headline, duration } = config;
+
+  return (
+    <section
+      className={`${idScope}-section relative w-full overflow-hidden`}
+      style={{ height: "100vh", backgroundColor: "#0C0B09" }}
+    >
+      {/* z-1 — BEFORE (always visible) */}
+      <div className="absolute inset-0 z-[1]">
+        <Image
+          src={before}
+          alt=""
+          fill
+          sizes="100vw"
+          className="object-cover"
+          style={{ objectPosition: objectPos, filter: "brightness(0.94) contrast(1.02)" }}
+        />
+      </div>
+
+      {/* z-2 — AFTER (clipped, revealed by scrub) */}
       <div
-        ref={sepRef}
-        className="absolute top-0 bottom-0 z-[3] pointer-events-none will-change-[left] hidden lg:block"
+        className={`${idScope}-after absolute inset-0 z-[2] overflow-hidden will-change-[clip-path]`}
+      >
+        <Image
+          src={after}
+          alt=""
+          fill
+          sizes="100vw"
+          className="object-cover"
+          style={{ objectPosition: objectPos, filter: "brightness(1.0) contrast(1.06)" }}
+        />
+
+        {/* DSD overlay — only on Case I, positions calibrated for
+            portrait framing (smile sits around y=72%, narrower
+            horizontal span than the close-up framing). */}
+        {showDSD && (
+          <>
+            <svg
+              className={`${idScope}-precision absolute inset-0 w-full h-full pointer-events-none`}
+              viewBox="0 0 100 100"
+              preserveAspectRatio="none"
+              aria-hidden="true"
+            >
+              {/* Vertical facial midline — extends through eyes/nose/mouth */}
+              <line
+                x1="50" y1="20" x2="50" y2="88"
+                stroke="#C9A048" strokeWidth="0.16"
+                vectorEffect="non-scaling-stroke"
+                strokeDasharray="68" strokeDashoffset="68"
+                opacity="0.42"
+                className={`${idScope}-precision-line`}
+              />
+              {/* Smile line — portrait framing, narrower horizontal */}
+              <line
+                x1="38" y1="72" x2="62" y2="72"
+                stroke="#C9A048" strokeWidth="0.30"
+                vectorEffect="non-scaling-stroke"
+                strokeDasharray="24" strokeDashoffset="24"
+                className={`${idScope}-precision-line`}
+              />
+              {/* Incisal edge */}
+              <line
+                x1="42" y1="66" x2="58" y2="66"
+                stroke="#C9A048" strokeWidth="0.16"
+                vectorEffect="non-scaling-stroke"
+                strokeDasharray="16" strokeDashoffset="16"
+                opacity="0.55"
+                className={`${idScope}-precision-line`}
+              />
+              {/* Canine markers */}
+              <line
+                x1="42" y1="68" x2="42" y2="76"
+                stroke="#C9A048" strokeWidth="0.22"
+                vectorEffect="non-scaling-stroke"
+                strokeDasharray="8" strokeDashoffset="8"
+                className={`${idScope}-precision-line`}
+              />
+              <line
+                x1="58" y1="68" x2="58" y2="76"
+                stroke="#C9A048" strokeWidth="0.22"
+                vectorEffect="non-scaling-stroke"
+                strokeDasharray="8" strokeDashoffset="8"
+                className={`${idScope}-precision-line`}
+              />
+              {/* φ bracket */}
+              <line
+                x1="54" y1="69" x2="54" y2="75"
+                stroke="#C9A048" strokeWidth="0.18"
+                vectorEffect="non-scaling-stroke"
+                strokeDasharray="6" strokeDashoffset="6"
+                opacity="0.7"
+                className={`${idScope}-precision-line`}
+              />
+              {/* Midline + smile-line intersection */}
+              <circle cx="50" cy="72" r="0.55" fill="#C9A048" className={`${idScope}-precision-mark`} />
+            </svg>
+
+            {/* Mono measurement labels — portrait framing */}
+            <div className={`${idScope}-precision absolute inset-0 pointer-events-none`}>
+              <span
+                className={`${idScope}-precision-label absolute font-data tracking-[0.32em] uppercase`}
+                style={{ top: "68%", left: "65%", fontSize: "10px", color: "rgba(201,160,72,0.95)" }}
+              >
+                &phi;&thinsp;1.618
+              </span>
+              <span
+                className={`${idScope}-precision-label absolute font-data tracking-[0.28em] uppercase`}
+                style={{ top: "76%", left: "50%", transform: "translateX(-50%)", fontSize: "8px", color: "rgba(201,160,72,0.72)" }}
+              >
+                Smile line &middot; 47.2&thinsp;mm
+              </span>
+              <span
+                className={`${idScope}-precision-label absolute font-data tracking-[0.28em] uppercase`}
+                style={{ top: "18%", left: "50%", transform: "translateX(-50%)", fontSize: "8.5px", color: "rgba(201,160,72,0.55)" }}
+              >
+                DSD &middot; Composed
+              </span>
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* z-3 — Separator beam (desktop only — mobile has no pin) */}
+      <div
+        className={`${idScope}-sep absolute top-0 bottom-0 z-[3] pointer-events-none will-change-[left] hidden lg:block`}
         style={{
           left:      "0%",
           width:     "1.5px",
@@ -285,7 +422,7 @@ export default function TransformationSection({ company }: { company: CompanyDat
         }}
       />
 
-      {/* ── z-4 — Vignette + atelier grid ─────────────────────────────── */}
+      {/* z-4 — Vignette + grid */}
       <div
         className="absolute inset-0 z-[4] pointer-events-none"
         style={{ background: "radial-gradient(ellipse 95% 85% at 50% 50%, transparent 30%, rgba(12,11,9,0.72) 100%)" }}
@@ -300,13 +437,13 @@ export default function TransformationSection({ company }: { company: CompanyDat
         }}
       />
 
-      {/* ── z-10 — Persistent UI ──────────────────────────────────────── */}
+      {/* z-10 — Persistent UI */}
 
-      {/* Top-left chapter indicator */}
-      <div className="tx-meta absolute top-24 left-6 lg:top-28 lg:left-12 z-[10] flex items-center gap-3">
+      {/* Top-left case indicator */}
+      <div className={`${idScope}-meta absolute top-12 left-6 lg:top-16 lg:left-12 z-[10] flex items-center gap-3`}>
         <span
           className="inline-block w-1.5 h-1.5 rounded-full"
-          style={{ backgroundColor: "#C9A048", animation: "caret-pulse 1.8s ease-in-out infinite", boxShadow: "0 0 8px rgba(201,160,72,0.7)" }}
+          style={{ backgroundColor: "#C9A048", boxShadow: "0 0 8px rgba(201,160,72,0.7)" }}
         />
         <span
           className="font-data text-[10px] tracking-[0.45em] uppercase"
@@ -315,34 +452,34 @@ export default function TransformationSection({ company }: { company: CompanyDat
             textShadow: "0 0 1px rgba(0,0,0,0.95), 0 1px 3px rgba(0,0,0,0.85), 0 2px 14px rgba(0,0,0,0.7)",
           }}
         >
-          I &mdash; The Transformation
+          {index}
         </span>
       </div>
 
-      {/* Top-right protocol tag */}
-      <div className="tx-cap absolute top-24 right-6 lg:top-28 lg:right-12 z-[10] text-right">
+      {/* Top-right case caption */}
+      <div className={`${idScope}-cap absolute top-12 right-6 lg:top-16 lg:right-12 z-[10] text-right`}>
         <div
           className="font-data text-[10px] tracking-[0.45em] uppercase mb-1"
           style={{
-            color:      "rgba(201,160,72,0.85)",
+            color:      "rgba(201,160,72,0.9)",
             textShadow: "0 0 1px rgba(0,0,0,0.9), 0 1px 6px rgba(0,0,0,0.7)",
           }}
         >
-          DSD Protocol
+          {headline}
         </div>
         <div
           className="font-data text-[9px] tracking-[0.32em] uppercase"
           style={{
-            color:      "rgba(216,210,200,0.55)",
+            color:      "rgba(216,210,200,0.6)",
             textShadow: "0 0 1px rgba(0,0,0,0.9), 0 1px 6px rgba(0,0,0,0.6)",
           }}
         >
-          Case &middot; Composed
+          {duration}
         </div>
       </div>
 
       {/* Bottom-left — Before */}
-      <div className="tx-label-before absolute bottom-32 left-6 lg:bottom-40 lg:left-12 z-[10]">
+      <div className={`${idScope}-label-before absolute bottom-24 left-6 lg:bottom-32 lg:left-12 z-[10]`}>
         <span
           className="font-display italic"
           style={{
@@ -366,7 +503,7 @@ export default function TransformationSection({ company }: { company: CompanyDat
       </div>
 
       {/* Bottom-right — After */}
-      <div className="tx-label-after absolute bottom-32 right-6 lg:bottom-40 lg:right-12 z-[10] text-right">
+      <div className={`${idScope}-label-after absolute bottom-24 right-6 lg:bottom-32 lg:right-12 z-[10] text-right`}>
         <span
           className="font-display italic"
           style={{
@@ -389,8 +526,8 @@ export default function TransformationSection({ company }: { company: CompanyDat
         </p>
       </div>
 
-      {/* Bottom-center scroll cue (desktop only — mobile doesn't pin) */}
-      <div className="tx-cue absolute bottom-8 left-1/2 -translate-x-1/2 z-[10] hidden lg:flex flex-col items-center gap-2 pointer-events-none">
+      {/* Bottom-center scroll cue (desktop only) */}
+      <div className={`${idScope}-cue absolute bottom-8 left-1/2 -translate-x-1/2 z-[10] hidden lg:flex flex-col items-center gap-2 pointer-events-none`}>
         <span
           className="font-data text-[9px] tracking-[0.45em] uppercase"
           style={{
