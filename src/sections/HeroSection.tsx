@@ -303,13 +303,13 @@ export default function HeroSection({ company }: { company: CompanyData }) {
               from clobbering each other. */}
           <div className="s1-photo-inner absolute inset-0 lg:will-change-transform">
             <Image
-              src="/images/dental/hero-smile.png"
+              src="/images/dental/portrait-after.png"
               alt=""
               fill
               sizes="100vw"
               priority
               className="object-cover"
-              style={{ objectPosition: "center 35%" }}
+              style={{ objectPosition: "center 30%" }}
             />
           </div>
         </div>
