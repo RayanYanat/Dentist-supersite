@@ -71,20 +71,17 @@ const CASE_TWO: CaseConfig = {
   objectPos: "center 35%",
 };
 
-/* TODO — third case currently reuses the close-up pair while the
- * implants before/after pair is being generated in Gemini. Once
- * /images/dental/implants-before.png and implants-after.png exist
- * in public/, just swap the before/after paths below. The cosmetic
- * implants brief is: BEFORE shows a clearly missing upper front
- * tooth, AFTER shows the same person with the implant crown placed.
- * See chat thread for the full Gemini prompt. */
+/* Implants pair — same subject as the portrait pair, full-face
+ * frontal, generated from the same master prompt with the BEFORE
+ * showing a missing upper-left central incisor (#21) and the AFTER
+ * showing the same gap restored with an implant crown. */
 const CASE_THREE: CaseConfig = {
   index:     "III",
   headline:  "Dental Implants + Crown",
   duration:  "16 weeks · 4 visits",
-  before:    "/images/dental/before.png",            // placeholder — replace with implants-before.png
-  after:     "/images/dental/after.png",             // placeholder — replace with implants-after.png
-  objectPos: "center 35%",
+  before:    "/images/dental/implants-before.png",
+  after:     "/images/dental/implants-after.png",
+  objectPos: "center 28%",
 };
 
 export default function TransformationSection({ company }: { company: CompanyData }) {
