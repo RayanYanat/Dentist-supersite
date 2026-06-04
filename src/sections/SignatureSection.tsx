@@ -176,7 +176,7 @@ export default function MakerSection({ company }: { company: CompanyData }) {
                 }}
               >
                 <Image
-                  src="/images/dental/team.png"
+                  src="/images/dental/team.webp"
                   alt=""
                   fill
                   sizes="(min-width: 1024px) 40vw, 100vw"

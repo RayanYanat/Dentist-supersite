@@ -57,8 +57,8 @@ const CASE_ONE: CaseConfig = {
   index:     "I",
   headline:  "Smile Design + Veneers",
   duration:  "12 days · 3 visits",
-  before:    "/images/dental/portrait-before.png",
-  after:     "/images/dental/portrait-after.png",
+  before:    "/images/dental/portrait-before.webp",
+  after:     "/images/dental/portrait-after.webp",
   objectPos: "center 28%",
 };
 
@@ -66,8 +66,8 @@ const CASE_TWO: CaseConfig = {
   index:     "II",
   headline:  "Bonding + Whitening",
   duration:  "1 visit · 90 minutes",
-  before:    "/images/dental/before.png",
-  after:     "/images/dental/after.png",
+  before:    "/images/dental/before.webp",
+  after:     "/images/dental/after.webp",
   objectPos: "center 35%",
 };
 
@@ -79,8 +79,8 @@ const CASE_THREE: CaseConfig = {
   index:     "III",
   headline:  "Dental Implants + Crown",
   duration:  "16 weeks · 4 visits",
-  before:    "/images/dental/implants-before.png",
-  after:     "/images/dental/implants-after.png",
+  before:    "/images/dental/implants-before.webp",
+  after:     "/images/dental/implants-after.webp",
   objectPos: "center 28%",
 };
 
