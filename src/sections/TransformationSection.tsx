@@ -71,6 +71,22 @@ const CASE_TWO: CaseConfig = {
   objectPos: "center 35%",
 };
 
+/* TODO — third case currently reuses the close-up pair while the
+ * implants before/after pair is being generated in Gemini. Once
+ * /images/dental/implants-before.png and implants-after.png exist
+ * in public/, just swap the before/after paths below. The cosmetic
+ * implants brief is: BEFORE shows a clearly missing upper front
+ * tooth, AFTER shows the same person with the implant crown placed.
+ * See chat thread for the full Gemini prompt. */
+const CASE_THREE: CaseConfig = {
+  index:     "III",
+  headline:  "Dental Implants + Crown",
+  duration:  "16 weeks · 4 visits",
+  before:    "/images/dental/before.png",            // placeholder — replace with implants-before.png
+  after:     "/images/dental/after.png",             // placeholder — replace with implants-after.png
+  objectPos: "center 35%",
+};
+
 export default function TransformationSection({ company }: { company: CompanyData }) {
   void company;
   const sectionRef = useRef<HTMLElement>(null);
@@ -187,7 +203,7 @@ export default function TransformationSection({ company }: { company: CompanyDat
               fontWeight:    400,
             }}
           >
-            Two cases.
+            Three cases.
             <br />
             <span style={{ fontStyle: "italic", color: "#D9B25C" }}>One hand.</span>
           </h2>
@@ -196,15 +212,17 @@ export default function TransformationSection({ company }: { company: CompanyDat
             className="tx-intro-lede mt-7 text-base leading-relaxed max-w-lg"
             style={{ color: "rgba(216,210,200,0.6)" }}
           >
-            Drag the handle on each case to compare. Both compositions
-            from the atelier — different scope, same hand.
+            Drag the handle on each case to compare. Three compositions
+            from the atelier — veneers, bonding, and implants — each
+            with its own scope, all composed by the same hand.
           </p>
         </div>
 
         {/* ── Cards grid ─────────────────────────────────────────── */}
-        <div className="tx-cards grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-10 pb-24 lg:pb-32">
+        <div className="tx-cards grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-7 pb-24 lg:pb-32">
           <CaseCard config={CASE_ONE} />
           <CaseCard config={CASE_TWO} />
+          <CaseCard config={CASE_THREE} />
         </div>
       </div>
     </section>
