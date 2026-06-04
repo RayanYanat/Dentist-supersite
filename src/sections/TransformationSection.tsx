@@ -264,31 +264,77 @@ function CaseCard({ config }: { config: CaseConfig }) {
        supported on all modern browsers). The card responds to:
        - hover (mouse only) — the slider follows the cursor live
        - drag (mouse + touch) — explicit "active" gesture
-       Both update setPos in the same handler. */
-    let isPointerDown = false;
 
-    const onPointerMove = (e: PointerEvent) => {
-      /* Mouse can scrub on hover (no button required); touch only
-         scrubs while the user is actively pressing (pointerdown→up). */
-      if (e.pointerType !== "mouse" && !isPointerDown) return;
-      setPos(eventToPct(e.clientX));
-    };
+       Touch handling — the card uses CSS touch-action: pan-y so the
+       browser keeps vertical scroll for itself and only sends us
+       horizontal gestures. We deliberately DON'T setPointerCapture on
+       touch — capturing would prevent the browser from sending us a
+       pointercancel when it decides a gesture is actually a vertical
+       scroll, and the section would trap the page on mobile (the bug
+       this rewrite fixes).
+
+       The decision flow on touch:
+       1. pointerdown — record start, mark dragging candidate
+       2. pointermove — if movement is primarily horizontal (Δx > Δy),
+          commit to scrubbing. If vertical, do nothing (browser will
+          take over and fire pointercancel for us).
+       3. pointercancel — browser stole the pointer for scroll, reset. */
+    let isDragging       = false;   // committed to a horizontal scrub
+    let dragCandidate    = false;   // pointerdown but not yet committed
+    let startX           = 0;
+    let startY           = 0;
+    const COMMIT_DELTA   = 6;       // px of horizontal travel before committing
 
     const onPointerDown = (e: PointerEvent) => {
-      isPointerDown = true;
-      setPos(eventToPct(e.clientX));
-      try { card.setPointerCapture(e.pointerId); } catch {}
+      if (e.pointerType === "mouse") {
+        /* Mouse: commit immediately, setPos to where the cursor is. */
+        isDragging = true;
+        setPos(eventToPct(e.clientX));
+      } else {
+        /* Touch: don't commit yet — wait to see if the gesture is
+           horizontal (scrub) or vertical (page scroll). */
+        dragCandidate = true;
+        startX = e.clientX;
+        startY = e.clientY;
+      }
     };
 
-    const onPointerUp = (e: PointerEvent) => {
-      isPointerDown = false;
-      try { card.releasePointerCapture(e.pointerId); } catch {}
+    const onPointerMove = (e: PointerEvent) => {
+      if (e.pointerType === "mouse") {
+        /* Mouse scrubs on every move (hover scrub + drag scrub). */
+        setPos(eventToPct(e.clientX));
+        return;
+      }
+
+      /* Touch path */
+      if (isDragging) {
+        setPos(eventToPct(e.clientX));
+      } else if (dragCandidate) {
+        const dx = Math.abs(e.clientX - startX);
+        const dy = Math.abs(e.clientY - startY);
+        if (dx > COMMIT_DELTA && dx > dy) {
+          /* Horizontal-dominant — commit to scrubbing */
+          isDragging    = true;
+          dragCandidate = false;
+          setPos(eventToPct(e.clientX));
+        } else if (dy > COMMIT_DELTA && dy > dx) {
+          /* Vertical-dominant — release; the browser will scroll the
+             page. We'll get a pointercancel shortly. */
+          dragCandidate = false;
+        }
+      }
     };
 
-    card.addEventListener("pointermove", onPointerMove);
-    card.addEventListener("pointerdown", onPointerDown);
-    card.addEventListener("pointerup",   onPointerUp);
-    card.addEventListener("pointercancel", onPointerUp);
+    const onPointerEnd = () => {
+      isDragging    = false;
+      dragCandidate = false;
+    };
+
+    card.addEventListener("pointermove",   onPointerMove);
+    card.addEventListener("pointerdown",   onPointerDown);
+    card.addEventListener("pointerup",     onPointerEnd);
+    card.addEventListener("pointercancel", onPointerEnd);
+    card.addEventListener("pointerleave",  onPointerEnd);
 
     /* One-shot preview animation when the card first scrolls into view.
        Sweeps 0 → 100 → 50 so the prospect SEES the transformation
@@ -320,10 +366,11 @@ function CaseCard({ config }: { config: CaseConfig }) {
     });
 
     return () => {
-      card.removeEventListener("pointermove", onPointerMove);
-      card.removeEventListener("pointerdown", onPointerDown);
-      card.removeEventListener("pointerup",   onPointerUp);
-      card.removeEventListener("pointercancel", onPointerUp);
+      card.removeEventListener("pointermove",   onPointerMove);
+      card.removeEventListener("pointerdown",   onPointerDown);
+      card.removeEventListener("pointerup",     onPointerEnd);
+      card.removeEventListener("pointercancel", onPointerEnd);
+      card.removeEventListener("pointerleave",  onPointerEnd);
       trigger.kill();
     };
   }, []);
@@ -331,10 +378,14 @@ function CaseCard({ config }: { config: CaseConfig }) {
   return (
     <article className="tx-card relative w-full">
       {/* Image container — 4:5 portrait, cursor:col-resize signals
-          the slider affordance to mouse users. */}
+          the slider affordance to mouse users.
+          touch-pan-y: the browser keeps vertical pan (page scrolling)
+          for itself, the JS handler only sees horizontal gestures.
+          This is the fix for the mobile bug where the card was
+          eating vertical scroll and trapping the user in the section. */}
       <div
         ref={cardRef}
-        className="relative w-full overflow-hidden touch-none select-none"
+        className="relative w-full overflow-hidden touch-pan-y select-none"
         style={{
           aspectRatio:     "4 / 5",
           backgroundColor: "#141210",
