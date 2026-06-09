@@ -10,6 +10,7 @@ import GlobalTexture from "@/components/shared/GlobalTexture";
 import GSAPConfig    from "@/components/shared/GSAPConfig";
 import SmoothScroll  from "@/components/shared/SmoothScroll";
 import VisitTracker  from "@/components/shared/VisitTracker";
+import ConceptBanner from "@/components/shared/ConceptBanner";
 import Navbar        from "@/components/layout/Navbar";
 import Footer        from "@/components/layout/Footer";
 import HeroSection           from "@/sections/HeroSection";
@@ -157,6 +158,8 @@ export default async function SlugPage({
 
         <Footer company={company} />
       </main>
+
+      <ConceptBanner name={company.name} />
     </>
   );
 }
